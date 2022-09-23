@@ -7,8 +7,6 @@ const urlconf = new URLConfig()
 const URL_HOST = urlconf.HOST
 
 const Sequelize = require("sequelize");
-console.log(conf.DB, conf.USER, conf.PASSWORD,conf.HOST,conf.dialect)
-
 const sequelize = new Sequelize(conf.DB, conf.USER, conf.PASSWORD, {
     host: conf.HOST,
     dialect: conf.dialect
@@ -402,9 +400,9 @@ const getAllStockSectors= async () =>{
     )
     
     return{
-      'position': setOfStks,
+      'position': arrofStks,
       'successful' :  count,
-      'failed': setOfStks.length - count
+      'failed': arrofStks.length - count
     }
 
  }
