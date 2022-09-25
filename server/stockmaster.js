@@ -9,8 +9,11 @@ const URL_HOST = urlconf.HOST
 const Sequelize = require("sequelize");
 const sequelize = new Sequelize(conf.DB, conf.USER, conf.PASSWORD, {
     host: conf.HOST,
-    dialect: conf.dialect
+    dialect: conf.dialect,
+    logging: false
   })
+
+const _= require("lodash")  
 
 const getUserDataForOps = async (userObj) =>{
 
@@ -383,8 +386,7 @@ const getAllStockSectors= async () =>{
 
  }
 
- const updStockPrices = async (arrofStks) =>{
-
+ const getStockPrices = async (arrofStks) =>{
     let responsefromextsite = await getStockHistDataMultiple([...arrofStks])
     let count = 0 
 
@@ -404,58 +406,28 @@ const getAllStockSectors= async () =>{
       'successful' :  count,
       'failed': arrofStks.length - count
     }
-
  }
 
- const savePositions = async (newPos, userObj) =>{
+ const updStockPrices = async (arrofStks) =>{
 
-    let userId = await getUserDataForOps(userObj)
-    let currpos = []
+    //let promisesforstkprcs = []
+    let retval = []
 
-    var initModels = require("../models/init-models"); 
-    var models = initModels(sequelize);
-    var usrStkPos = models.userstockpositions
+    console.log("processing a complete set of ",arrofStks.length)
+    let arrayofbatches = _.chunk(arrofStks,process.env.BATCH_SIZE_STOCK_QUOTE)
 
-    try{
-
-      await usrStkPos.findAll({where: {
-        iduserprofile: {
-          [Op.eq] : userId
-        }
-      }}).then(data => currpos=data) 
-
-      if (currpos.length > 0 ){
-        currpos = currpos[0].positions
-        let temppos = Array.from(new Set([...currpos,...newPos]))
-        await usrStkPos.update({'positions':temppos},{where:{iduserprofile:userId}}) 
-        await publishMessage("STOCK_EOD_PRICES",newPos)
-      }else{
-        await usrStkPos.create({'positions':[...newPos],'iduserprofile':userId,'createdt':Date.now()})
-        await publishMessage("STOCK_EOD_PRICES",{stocks:[...newPos]})
-      }
-
-    }catch(err){
-      console.log("error in function savePositions",err)
-      return false
+    for(let i=0;i<arrayofbatches.length;i++){
+      console.log("processing batch #",i,arrayofbatches[i])
+      retval.push(await getStockPrices(arrayofbatches[i]))
     }
+    
+    //await Promise.all(promisesfornews)
+    //                          .then(result => retval = result)
+    //                          .catch(err => console.log("newsfeed error",err))
+    //return retval.flat()
 
-    return true
+    return retval
 
- }
-
- const publishMessage =  async (type,message) =>{
-   let pubMsg = {}
-    try{
-        pubMsg.channel = type
-        pubMsg.message = message
-        const fetch = require("node-fetch"); 
-        console.log("pubMsgpubMsgpubMsgpubMsg",pubMsg)
-        await fetch(urlconf.PUB_MESSAGES, {method:'post', body: JSON.stringify(pubMsg), headers: { 'Content-Type': 'application/json' }})
-        .then(res => console.log(res))
-    }
-    catch (err){
-        console.log("error in publishMessage",err)
-    }
  }
 
 module.exports = {updStockPrices};
