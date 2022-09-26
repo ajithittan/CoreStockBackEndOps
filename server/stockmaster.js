@@ -15,83 +15,6 @@ const sequelize = new Sequelize(conf.DB, conf.USER, conf.PASSWORD, {
 
 const _= require("lodash")  
 
-const getUserDataForOps = async (userObj) =>{
-
-  var initModels = require("../models/init-models"); 
-  var models = initModels(sequelize);
-  var usrtable = models.userprofile
-  let userProf = {}
-  let userIdreturn = 0
-  let myCache = require('../servercache/cacheitems')
-  
-  try{
-    console.log("cached value - ",myCache.getCache("USER_OBJECT_FOR_ID" + userObj.usrid))
-    if (myCache.getCache("USER_OBJECT_FOR_ID" + userObj.usrid)){
-      userIdreturn = myCache.getCache("USER_OBJECT_FOR_ID" + userObj.usrid).iduserprofile
-      console.log("userIdreturn",userIdreturn)
-    }
-    else{
-        await usrtable.findAll({where: {
-          uniqueUUID: {
-                    [Op.eq] : userObj.usrid
-                }
-            },raw : true
-        }).then(data => userProf=data)
-        userIdreturn = userProf[0].iduserprofile
-        myCache.setCacheWithTtl("USER_OBJECT_FOR_ID" + userObj.usrid,userProf[0],120)
-    }
-  }
-  catch(error){
-    console.log("error in getUserDataForOps",error)
-  }
-
-  return userIdreturn
-}
-
-const getStockLists = async (userObj) => {
-    let dbresponse = ''
-    let arrstocklist = []
-    try {
-        
-        let userId = await getUserDataForOps(userObj)
-        let myCache = require('../servercache/cacheitems')
-        arrstocklist = myCache.getCache("STOCK_HOME_PAGE" + userId)
-        if (arrstocklist === undefined){
-          arrstocklist = [];
-          var initModels = require("../models/init-models"); 
-          var models = initModels(sequelize);
-          var usrStkPos = models.userstockpositions
-
-          await usrStkPos.findAll({where: {
-            iduserprofile: {
-              [Op.eq] : userId
-            }
-          }}).then(data => dbresponse=data[0].positions) 
-
-          for (let i=0;i<dbresponse.length;i++){
-            const stockobj = {}
-            stockobj.symbol = dbresponse[i]
-            let retfromextsite = await getperchange(dbresponse[i])
-            stockobj.perchange = retfromextsite.perchange
-            stockobj.close = retfromextsite.latestprice
-            stockobj.avgdayvol3mon = retfromextsite.avgdayvol3mon
-            stockobj.avgdayvol10day = retfromextsite.avgdayvol10day
-            stockobj.volume = retfromextsite.volume
-            stockobj.itemKey = dbresponse[i]
-            stockobj.key = dbresponse[i]
-            arrstocklist.push(stockobj)
-          }
-          arrstocklist.sort((a, b) => Math.abs(b.perchange) - Math.abs(a.perchange))
-            if (arrstocklist !== []){
-                let cacheset = myCache.setCacheWithTtl("STOCK_HOME_PAGE" + userId,arrstocklist,120)
-            }    
-        }
-      }catch (error) {
-        console.error('Error in getStockLists function:', error);
-    }
-    return arrstocklist
-}
-
 //regularMarketChange: -2.3899994,
 //regularMarketChangePercent: -2.0655081,
 //regularMarketTime: 1613666348,
@@ -103,76 +26,6 @@ const getStockLists = async (userObj) => {
 //regularMarketPreviousClose: 115.71,
 //bid: 113.55,
 //ask: 113.62,
-
-const getperchange = async (stksym) => {
-  let perchange = 0
-  let latestprice = 0
-  let stockdtls = {}
-  const stkInfo = require('stock-info');
-  await stkInfo.getSingleStockInfo(stksym).then(retData => {stockdtls.perchange = parseFloat(retData.regularMarketChangePercent)
-            ,stockdtls.latestprice=parseFloat(retData.regularMarketPrice),
-            stockdtls.avgdayvol3mon = parseFloat(retData.averageDailyVolume3Month),
-            stockdtls.avgdayvol10day = parseFloat(retData.averageDailyVolume10Day),
-            stockdtls.volume = parseFloat(retData.regularMarketVolume)});
-  return stockdtls 
-}
-
-const getstockquotes = async (stksym) => {
-  let stockdtls = {}
-  const stkInfo = require('stock-info');
-  await stkInfo.getStocksInfo(stksym).then(retData => stockdtls = retData);
-  console.log(typeof(stockdtls[0]))
-  return formatResp(stockdtls)
-}
-
-const formatResp = (respfromext) =>{
-  let retvals = []
-  for (var i = 0; i < respfromext.length; i++) { 
-    let objval = {}
-    //console.log(respfromext[i])
-    objval["symbol"] = respfromext[i].symbol
-    objval["close"] = respfromext[i].regularMarketPrice
-    objval["high"] = respfromext[i].regularMarketDayHigh
-    objval["low"] = respfromext[i].regularMarketDayLow
-    objval["open"] = respfromext[i].regularMarketOpen
-    objval["volume"] = respfromext[i].regularMarketVolume
-    objval["perchange"] = respfromext[i].regularMarketChangePercent
-    retvals.push(objval)
-  }
-  return retvals
-}
-
-const getStockHistData = async (stksym,position) => {
-  
-  let response
-  let enddt = new Date()
-  let dow = enddt.getDay()
-
-  if (dow === 1 || dow === 2 || dow === 3 || dow === 4 || dow === 5){
-    enddt.setDate(enddt.getDate() - 1)
-  }
-  const yahooFinance = require('yahoo-finance');     
-  await yahooFinance.historical({
-    symbol: stksym,
-    from: '2000-01-01',
-    to: enddt,
-    period: 'd'
-
-  }).then(result => response=result)
-
-  console.log(response)
-
-  if (response.length > 0){
-    try{
-      await insertintostkprcday(response)
-      position === 1 ? await checkandinsertstklist(stksym) : null
-    }catch (error) {
-      console.log("getStockHistData - Error when updating DB from Yahoo",error,response,stksym)
-      return false
-    }
-  }
-  return response
-}
 
 const insertintostkprcday = async (arrofprices) => {
 
@@ -189,35 +42,6 @@ const insertintostkprcday = async (arrofprices) => {
   await flushAllCache()
 }
 
- const checkandinsertstklist = async (stksym) => {
-
-  var initModels = require("../models/init-models"); 
-  var models = initModels(sequelize);
-  var stocklist = models.stocklist
-  let prclist 
-  await stocklist.count({where: {
-        symbol: {
-          [Op.eq] : stksym
-        }
-      }
-    }).then(data => prclist=data) 
-    console.log('data checkandinsertstklist',prclist)
-    if (prclist === 0){
-      await stocklist.create({'symbol':stksym,'name':stksym,'sector':'UNKOWN','updated_on':'2021-01-01','track':1})
-    }else{
-      await stocklist.update({'track':1},{where:{symbol:stksym}})
-    } 
- } 
-
- const getAllIndicatorParams = async () =>{
-  var initModels = require("../models/init-models"); 
-  var models = initModels(sequelize);
-  var cdlpttrns = models.stockindicatorparams
-  let retdata = ""
-  await cdlpttrns.findAll().then(result => console.log('Result of getAllIndicatorParams',retdata = result))
-  return retdata
- }
-
  const flushAllCache = async () =>{
   let myCache = require('../servercache/cacheitems')
   console.log("before flushing - ",myCache.getCacheStats())
@@ -226,168 +50,66 @@ const insertintostkprcday = async (arrofprices) => {
   return retVal
  }
 
- const getStockSectors = async (userObj) =>{
-  let userId = await getUserDataForOps(userObj)
-  let dbresponse = await getStockSectorsfromDB(userId)
-  return dbresponse
+ const getStockHistDataMultiple = async (stksym,frmdate) => {
+    let response=[]
+    let enddt = new Date()
+    let dow = enddt.getDay()
+
+    if (dow === 1 || dow === 2 || dow === 3 || dow === 4 || dow === 5){
+      enddt.setDate(enddt.getDate())
+    }
+    const yahooFinance = require('yahoo-finance');   
+    await yahooFinance.historical({
+      symbols: stksym,
+      from: frmdate,
+      to: enddt,
+      period: 'd'
+    }).then(result => response=result)
+    return response
 }
 
-const getStockSectorsfromDB = async (user) =>{
-
+const getLastStockDate = async (stksym) =>{
   var initModels = require("../models/init-models"); 
   var models = initModels(sequelize);
-  var stocksector = models.stocksector
-  try {
-        await stocksector.findAll({  
-        attributes: ['sector','stocks','idstocksector'],
-        where: {
-          iduserprofile: {
-                [Op.eq] : user
-        }
-        }
-      }).then(data => dbresponse=(data))
-    } catch (error) {
-      console.log("getStockSectorsfromDB - Error",error)
-    }
-    return dbresponse
-}
-
-const getAllStockSectors= async () =>{
-
-  var initModels = require("../models/init-models"); 
-  var models = initModels(sequelize);
-  var stocksector = models.stocksector
-  try {
-        await stocksector.findAll({  
-        attributes: ['sector','stocks','idstocksector']
-      }).then(data => dbresponse=(data))
-    } catch (error) {
-      console.log("getStockSectorsfromDB - Error",error)
-    }
-    return dbresponse
-}
-
- const createStockSectors = async (sector,userObj) =>{
-  
-  let retval = false
-  var initModels = require("../models/init-models"); 
-  var models = initModels(sequelize); 
-  var stocksector = models.stocksector
-  let stkliks = new Set([...sector.stocks])
-  try{
-    let userId = await getUserDataForOps(userObj)
-    await stocksector.create({'sector':sector.sector,'stocks':Array.from(stkliks),'iduserprofile':userId})
-    retval = true
-  }catch(error){
-    console.log("createStockSectors - Error when creating sector",error)
-  }
-  return retval
- }
-
- const deleteSector = async (sectorid) =>{
-  let retval = false
-  var initModels = require("../models/init-models"); 
-  var models = initModels(sequelize); 
-  var stocksector = models.stocksector
-  try{
-    await stocksector.destroy({
-      where: {
-        idstocksector: sectorid
-      }
-   }).then(retval = true)
-  }catch(error){
-    console.log("deleteSector - Error when deleting sector",error)
-  }
-  return retval
- }
-
- const updSectors = async (sectors) =>{
-  let retval = true
-  var initModels = require("../models/init-models"); 
-  var models = initModels(sequelize); 
-  var stocksector = models.stocksector
-  try{
-    for (let i=0;i<sectors.length;i++){
-      await stocksector.update({'sector':sectors[i].sector,'stocks':sectors[i].stocks},{where:{idstocksector:sectors[i].idstocksector}})
-    }
-  }catch(error){
-    retval = false
-    console.log("deleteSector - Error when deleting sector",error)
-  }
-  return retval
- }
-
- const getStockHistDataMultiple = async (stksym) => {
-  
-  console.log(stksym)
-  let response
-  let enddt = new Date()
-  let dow = enddt.getDay()
-
-  if (dow === 1 || dow === 2 || dow === 3 || dow === 4 || dow === 5){
-    enddt.setDate(enddt.getDate() - 1)
-  }
-  const yahooFinance = require('yahoo-finance');     
-  await yahooFinance.historical({
-    symbols: stksym,
-    from: '2000-01-01',
-    to: enddt,
-    period: 'd'
-
-  }).then(result => response=result)
-  return response
-}
-
- const getAllSecStocksNormalized = async () =>{
-  let stkSecs = await getAllStockSectors()
-  return ([...stkSecs.map(item => item.stocks)].flat())
- }
-
- const getAllPosStks = async () =>{
-  var initModels = require("../models/init-models"); 
-  var models = initModels(sequelize);
-  var stocklist = models.stocklist
+  var stockpriceday = models.stockpriceday
   let dbresponse = []
 
-  await stocklist.findAll({where: {
-    track: {
-      [Op.eq] : 1
-    }
-  }}).then(data => dbresponse=data) 
+  await stockpriceday.findAll({where: {
+    symbol: {
+      [Op.eq] : stksym
+    }},limit: 1,
+    order: [['date', 'DESC']]
+  }).then(data => dbresponse=data) 
 
-  return(dbresponse.map(item => item.symbol))
+  if (dbresponse.length > 0){
+    return {stk:stksym,recentdt:dbresponse[0].date}
+  }else{
+    return {stk:stksym,recentdt:'2000-01-01'}
+  }
+}
 
- }
+const getDatesinBatch = async (arrofStks) =>{
 
- const updateAllStockPrices = async () =>{
-  
-    let postks = await getAllPosStks()
-    let secStks = await getAllSecStocksNormalized()
-    let setOfStks = new Set([...postks,...secStks])
-    let responsefromextsite = await getStockHistDataMultiple([...setOfStks])
-    let count = 0 
+  let promisesinLoop = []
+  let retval = []
 
-    Object.values(responsefromextsite).forEach(async stockprice => {
-        try{
-          await insertintostkprcday(stockprice)
-          count++
-        }catch(error){
-          retval = false
-          console.log("updateAllStockPrices - Error when updateAllStockPrices",error,stockprice[0].symbol)
-        }
-      }
-    )
-    
-    return{
-      'position': setOfStks,
-      'successful' :  count,
-      'failed': setOfStks.length - count
-    }
+  for(let i=0;i<arrofStks.length;i++){
+    promisesinLoop.push(getLastStockDate(arrofStks[i]))
+  }
 
- }
+  await Promise.all(promisesinLoop)
+               .then(result => retval = result)
+               .catch(err => console.log("getDatesinBatch fn error",err))
+
+  console.log("retvalretvalretvalretval",retval)
+  return retval
+}
 
  const getStockPrices = async (arrofStks) =>{
-    let responsefromextsite = await getStockHistDataMultiple([...arrofStks])
+    let stkswDates = await getDatesinBatch(arrofStks)
+    stkswDates = stkswDates.map(item => new Date(item.recentdt)).sort((a,b) => Date.parse(a) - Date.parse(b))[0]
+    console.log("sorted value is ",stkswDates)
+    let responsefromextsite = await getStockHistDataMultiple([...arrofStks],stkswDates)
     let count = 0 
 
     Object.values(responsefromextsite).forEach(async stockprice => {
@@ -395,12 +117,11 @@ const getAllStockSectors= async () =>{
           await insertintostkprcday(stockprice)
           count++
         }catch(error){
-          retval = false
           console.log("updateAllStockPrices - Error when updateAllStockPrices",error,stockprice[0].symbol)
         }
       }
     )
-    
+
     return{
       'position': arrofStks,
       'successful' :  count,
@@ -410,21 +131,14 @@ const getAllStockSectors= async () =>{
 
  const updStockPrices = async (arrofStks) =>{
 
-    //let promisesforstkprcs = []
     let retval = []
 
-    console.log("processing a complete set of ",arrofStks.length)
     let arrayofbatches = _.chunk(arrofStks,process.env.BATCH_SIZE_STOCK_QUOTE)
 
     for(let i=0;i<arrayofbatches.length;i++){
       console.log("processing batch #",i,arrayofbatches[i])
       retval.push(await getStockPrices(arrayofbatches[i]))
     }
-    
-    //await Promise.all(promisesfornews)
-    //                          .then(result => retval = result)
-    //                          .catch(err => console.log("newsfeed error",err))
-    //return retval.flat()
 
     return retval
 
