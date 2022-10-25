@@ -56,7 +56,7 @@ const insertintostkprcday = async (arrofprices) => {
     let dow = enddt.getDay()
 
     if (dow === 1 || dow === 2 || dow === 3 || dow === 4 || dow === 5){
-      enddt.setDate(enddt.getDate())
+      enddt.setDate(enddt.getDate() - 1)
     }
     const yahooFinance = require('yahoo-finance');   
     await yahooFinance.historical({
