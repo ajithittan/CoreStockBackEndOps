@@ -84,7 +84,7 @@ const getLastStockDate = async (stksym) =>{
   if (dbresponse.length > 0){
     return {stk:stksym,recentdt:dbresponse[0].date}
   }else{
-    return {stk:stksym,recentdt:'2000-01-01'}
+    return {stk:stksym,recentdt:'1980-01-01'}
   }
 }
 
