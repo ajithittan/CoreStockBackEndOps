@@ -4,7 +4,7 @@ const conf = new DBConfig()
 
 const URLConfig = require("../config/url.config.js");
 const urlconf = new URLConfig()
-const URL_HOST = urlconf.HOST
+const CORE_STOCK_MS = urlconf.CORE_STOCK_MS
 
 const Sequelize = require("sequelize");
 const sequelize = new Sequelize(conf.DB, conf.USER, conf.PASSWORD, {
@@ -115,6 +115,7 @@ const getDatesinBatch = async (arrofStks) =>{
     Object.values(responsefromextsite).forEach(async stockprice => {
         try{
           await insertintostkprcday(stockprice)
+          await checkAndInsertIntoStockMaster(stockprice[0].symbol)
           count++
         }catch(error){
           console.log("updateAllStockPrices - Error when updateAllStockPrices",error,stockprice[0].symbol)
@@ -127,6 +128,60 @@ const getDatesinBatch = async (arrofStks) =>{
       'successful' :  count,
       'failed': arrofStks.length - count
     }
+ }
+
+ const doesCompanyExist = async (stkSym) =>{
+    let retval = false
+    var initModels = require("../models/init-models"); 
+    var models = initModels(sequelize);
+    var mstStkList = models.stocklist
+
+    await mstStkList.findAll({where: {
+      symbol: {
+        [Op.eq] : stkSym
+      }}
+    }).then(data => data.length > 0 ? retval = true: null ) 
+
+    return retval
+ }
+
+ const checkAndInsertIntoStockMaster = async (stkSym) =>{
+    let retval = false
+
+    if (await doesCompanyExist(stkSym)){
+      retval = true
+    }  
+    else{
+      let compDtls = await getCompanyDetails(stkSym)
+      await insertIntoStkMaster(stkSym,compDtls.companyName,compDtls.sector,1)
+    }  
+    return retval
+ }
+
+ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
+
+  var initModels = require("../models/init-models"); 
+  var models = initModels(sequelize);
+  var stocklist = models.stocklist
+    try{
+      await stocklist.create({'symbol':stksym,'name':stkName,'sector':stkSector,'updated_on':Date.now(),'track':track})
+    }catch (error) {
+      console.log("insertIntoStkMaster - Error",error)
+    }
+ }
+
+ const getCompanyDetails = async (stkSym) =>{
+    const fetch = require("node-fetch");
+    let response
+    try{
+      await fetch(CORE_STOCK_MS + 'api/v2/companydetails/' + stkSym)
+      .then(res => res.json())
+      .then(json => {response=json});
+    }
+    catch (err){
+      console.log(err)
+    }
+    return response
  }
 
  const updStockPrices = async (arrofStks) =>{
@@ -143,5 +198,6 @@ const getDatesinBatch = async (arrofStks) =>{
     return retval
 
  }
+
 
 module.exports = {updStockPrices};
