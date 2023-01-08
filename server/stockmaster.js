@@ -131,6 +131,7 @@ const getDatesinBatch = async (arrofStks) =>{
  }
 
  const doesCompanyExist = async (stkSym) =>{
+
     let retval = false
     var initModels = require("../models/init-models"); 
     var models = initModels(sequelize);
