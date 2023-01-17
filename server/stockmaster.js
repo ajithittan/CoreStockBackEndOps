@@ -200,5 +200,8 @@ const getDatesinBatch = async (arrofStks) =>{
 
  }
 
+ const processUserStockPositions = async (positions) =>{
+   console.log("processUserStockPositions",positions)
+ }
 
-module.exports = {updStockPrices};
+module.exports = {updStockPrices,processUserStockPositions};
