@@ -200,8 +200,80 @@ const getDatesinBatch = async (arrofStks) =>{
 
  }
 
- const processUserStockPositions = async (positions) =>{
-   console.log("processUserStockPositions",positions)
+ const getExistingPositions = async (userId,stkSym) => {
+    var initModels = require("../models/init-models"); 
+    var models = initModels(sequelize);
+    var usrPrflio = models.userportfolio
+    let response = []
+    try{
+      await usrPrflio.findAll({where: {
+          symbol: {
+            [Op.eq] : stkSym
+          },iduserprofile: {
+            [Op.eq] : userId
+          }
+        }
+      }).then(data => response = data) 
+    }catch (err){
+        console.log("error in function - getExistingPositions",err)
+    }
+    return response
  }
 
-module.exports = {updStockPrices,processUserStockPositions};
+ const insertorUpdPortfolio = async (userId,stksym,positon) =>{
+
+    var initModels = require("../models/init-models"); 
+    var models = initModels(sequelize);
+    var usrPrflio = models.userportfolio
+    try{
+        await usrPrflio.upsert({'iduserprofile': userId,
+                              'symbol':stksym,
+                              'positions':positon,
+                              'create_dt':Date.now()})
+    }catch (error) {
+        console.log("insertIntoPortfolio - Error",error)
+    }
+ }
+
+ const deleteStockPortfolio = async (userId,stkSym) =>{
+
+  var initModels = require("../models/init-models"); 
+  var models = initModels(sequelize);
+  var usrPrflio = models.userportfolio
+  try{
+      await usrPrflio.destroy({where: {
+        symbol: {
+          [Op.eq] : stkSym
+        },iduserprofile: {
+          [Op.eq] : userId
+        }
+      }
+    })
+  }catch (error) {
+      console.log("deleteStockPortfolio - Error",error)
+  }
+}
+
+ const processUserStockPositions = async (inpData) => {
+    let existingpos = await getExistingPositions(inpData.userId,inpData.stock)
+    let positionsToInsert = []
+    if (existingpos && existingpos.length > 0){
+        positionsToInsert = existingpos[0].positions
+    }
+    positionsToInsert.push(inpData.position) 
+    insertorUpdPortfolio(inpData.userId,inpData.stock,positionsToInsert)
+ }
+
+ const deleteUserStockPosition = async (inpData) =>{
+    let existingpos = await getExistingPositions(inpData.userId,inpData.stock)
+    let filteredVal = existingpos[0].positions.filter(item => !(item.date === inpData.position.date 
+                                                                && item.close === inpData.position.close))
+    console.log("filteredVal",inpData,filteredVal)
+    if (filteredVal.length > 0 ){
+      insertorUpdPortfolio(inpData.userId,inpData.stock,filteredVal)
+    }else{
+      deleteStockPortfolio(inpData.userId,inpData.stock)
+    }
+ }
+
+module.exports = {updStockPrices,processUserStockPositions,deleteUserStockPosition};
