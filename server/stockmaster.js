@@ -278,22 +278,34 @@ const getDatesinBatch = async (arrofStks) =>{
 
  const writeToCache = async (inpQuotes) =>{
     let cacheitems = require("../servercache/cacheitemsredis")
+    console.log("Batch of quotes that came thru",inpQuotes.length)
     for(let i=0;i<inpQuotes.length;i++){
-      console.log(process.env.STOCK_INFO + "-" + inpQuotes[i]["symbol"],inpQuotes[i])
       await cacheitems.setCacheWithTtl(process.env.STOCK_INFO + "-" + inpQuotes[i]["symbol"],inpQuotes[i],36000)
     }
     return true
  }
 
+ const clearBatchFromCache = (inpKey) =>{
+  let cacheitems = require("../servercache/cacheitemsredis")
+  cacheitems.delCachedKey(inpKey)
+ }
+
  const extractQuotesAndNormalize = async(inpDataToProcess) => {
-  const fetch = require("node-fetch");
-  let url = 'https://sarphira.com/realtime/stocksfromext/bulk/REST1';
-    fetch(url)
-    .then(res => res.json())
-    .then(out =>{
-      writeToCache(JSON.parse(out["data"]))
-    })
-    .catch(err => { throw err });
+    const fetch = require("node-fetch");
+    let arrOfUrlAppends = JSON.parse(process.env.EXT_QUOTE_TYPES)
+    for (let j=0;j<arrOfUrlAppends.length;j++){
+      for (let i=0;i<10;i++){
+        let url = urlconf.EXTERNAL_QUOTES + arrOfUrlAppends[j] + i;
+        console.log("url",url)
+        fetch(url)
+        .then(res => res.json())
+        .then(out =>{
+          writeToCache(JSON.parse(out["data"]))
+          clearBatchFromCache(arrOfUrlAppends[j] + i)
+        })
+        .catch(err => { console.log("error not a json") });
+      }  
+    }
  }
 
 module.exports = {updStockPrices,processUserStockPositions,deleteUserStockPosition,extractQuotesAndNormalize};
