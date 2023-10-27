@@ -36,12 +36,12 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
     }
     return res.status(200).send(response);
   });
-  app.post('/api/processsubmsgs/stockquotes/:typeOfquote', async (req, res) => {
+  app.post('/api/processsubmsgs/processquotesfromext', async (req, res) => {
     let response
     try{
       console.log("before extractQuotesAndNormalize.....")
       var masterstkops = require('../server/stockmaster');
-      response = await masterstkops.extractQuotesAndNormalize(req.params.typeOfquote)
+      response = await masterstkops.extractQuotesAndNormalize()
     }
     catch (err){
       console.log(err)

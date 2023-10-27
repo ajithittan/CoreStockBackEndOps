@@ -147,19 +147,24 @@ const getDatesinBatch = async (arrofStks) =>{
  }
 
  const checkAndInsertIntoStockMaster = async (stkSym) =>{
-    let retval = false
+  let retval = false
 
-    if (await doesCompanyExist(stkSym)){
-      retval = true
-    }  
-    else{
+  if (await doesCompanyExist(stkSym)){
+    retval = true
+  }  
+  else{
+    try{
       let compDtls = await getCompanyDetails(stkSym)
-      await insertIntoStkMaster(stkSym,compDtls.companyName,compDtls.sector,1)
-    }  
-    return retval
- }
+      let sector = compDtls.sector || "UNKOWN"
+      await insertIntoStkMaster(stkSym,compDtls.companyName,sector,1)  
+    }catch{
+      console.log("error in function checkAndInsertIntoStockMaster", stkSym)
+    }
+  }  
+  return retval
+}
 
- const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
+const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
 
   var initModels = require("../models/init-models"); 
   var models = initModels(sequelize);
@@ -167,9 +172,9 @@ const getDatesinBatch = async (arrofStks) =>{
     try{
       await stocklist.create({'symbol':stksym,'name':stkName,'sector':stkSector,'updated_on':Date.now(),'track':track})
     }catch (error) {
-      console.log("insertIntoStkMaster - Error",error)
+      console.log("insertIntoStkMaster - Error",stksym,error)
     }
- }
+}
 
  const getCompanyDetails = async (stkSym) =>{
     const fetch = require("node-fetch");
@@ -280,17 +285,19 @@ const getDatesinBatch = async (arrofStks) =>{
     let cacheitems = require("../servercache/cacheitemsredis")
     console.log("Batch of quotes that came thru",inpQuotes.length)
     for(let i=0;i<inpQuotes.length;i++){
-      await cacheitems.setCacheWithTtl(process.env.STOCK_INFO + "-" + inpQuotes[i]["symbol"],inpQuotes[i],36000)
+      let cacheKey = process.env.STOCK_INFO + inpQuotes[i]["symbol"]
+      await cacheitems.setCacheWithTtl(cacheKey,inpQuotes[i],36000)
     }
     return true
  }
 
  const clearBatchFromCache = (inpKey) =>{
+  console.log("key to delete",inpKey) 
   let cacheitems = require("../servercache/cacheitemsredis")
   cacheitems.delCachedKey(inpKey)
  }
 
- const extractQuotesAndNormalize = async(inpDataToProcess) => {
+ const extractQuotesAndNormalize = async() => {
     const fetch = require("node-fetch");
     let arrOfUrlAppends = JSON.parse(process.env.EXT_QUOTE_TYPES)
     for (let j=0;j<arrOfUrlAppends.length;j++){
@@ -301,7 +308,7 @@ const getDatesinBatch = async (arrofStks) =>{
         .then(res => res.json())
         .then(out =>{
           writeToCache(JSON.parse(out["data"]))
-          clearBatchFromCache(arrOfUrlAppends[j] + i)
+          clearBatchFromCache(process.env.CACHE_EXT_STK_QT + arrOfUrlAppends[j] + i)
         })
         .catch(err => { console.log("error not a json") });
       }  
