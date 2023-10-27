@@ -276,4 +276,24 @@ const getDatesinBatch = async (arrofStks) =>{
     }
  }
 
-module.exports = {updStockPrices,processUserStockPositions,deleteUserStockPosition};
+ const writeToCache = async (inpQuotes) =>{
+    let cacheitems = require("../servercache/cacheitemsredis")
+    for(let i=0;i<inpQuotes.length;i++){
+      console.log(process.env.STOCK_INFO + "-" + inpQuotes[i]["symbol"],inpQuotes[i])
+      await cacheitems.setCacheWithTtl(process.env.STOCK_INFO + "-" + inpQuotes[i]["symbol"],inpQuotes[i],36000)
+    }
+    return true
+ }
+
+ const extractQuotesAndNormalize = async(inpDataToProcess) => {
+  const fetch = require("node-fetch");
+  let url = 'https://sarphira.com/realtime/stocksfromext/bulk/REST1';
+    fetch(url)
+    .then(res => res.json())
+    .then(out =>{
+      writeToCache(JSON.parse(out["data"]))
+    })
+    .catch(err => { throw err });
+ }
+
+module.exports = {updStockPrices,processUserStockPositions,deleteUserStockPosition,extractQuotesAndNormalize};
