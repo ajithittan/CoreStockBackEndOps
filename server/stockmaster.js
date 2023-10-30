@@ -285,7 +285,7 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
     let cacheitems = require("../servercache/cacheitemsredis")
     console.log("Batch of quotes that came thru",inpQuotes.length)
     for(let i=0;i<inpQuotes.length;i++){
-      let cacheKey = process.env.STOCK_INFO + inpQuotes[i]["symbol"]
+      let cacheKey = process.env.STOCK_INFO + inpQuotes[i]["symbol"].toUpperCase()
       await cacheitems.setCacheWithTtl(cacheKey,inpQuotes[i],36000)
     }
     return true
