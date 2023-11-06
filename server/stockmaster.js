@@ -281,12 +281,34 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
     }
  }
 
+ const getCompanyName = async (stkSym) =>{
+    let initModels = require("../models/init-models"); 
+    let models = initModels(sequelize);
+    let stkcik = models.stockcik
+    let response = {}
+    try{
+        await stkcik.findAll({where: {
+          symbol: {
+            [Op.eq] : stkSym
+          }}
+        }).then(data => response = data[0]) 
+    }catch (error) {
+        console.log("deleteStockPortfolio - Error",error)
+    }
+    return response
+ }
+
+ const enrichCacheWithData = async (inpVal) =>{
+    let compName = await getCompanyName(inpVal["symbol"])
+    inpVal.companyname = compName.title
+    return inpVal
+ }
+
  const writeToCache = async (inpQuotes) =>{
     let cacheitems = require("../servercache/cacheitemsredis")
-    console.log("Batch of quotes that came thru",inpQuotes.length)
     for(let i=0;i<inpQuotes.length;i++){
       let cacheKey = process.env.STOCK_INFO + inpQuotes[i]["symbol"].toUpperCase()
-      await cacheitems.setCacheWithTtl(cacheKey,inpQuotes[i],36000)
+      enrichCacheWithData(inpQuotes[i]).then(retval => cacheitems.setCacheWithTtl(cacheKey,retval,36000))
     }
     return true
  }
