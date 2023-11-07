@@ -273,7 +273,6 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
     let existingpos = await getExistingPositions(inpData.userId,inpData.stock)
     let filteredVal = existingpos[0].positions.filter(item => !(item.date === inpData.position.date 
                                                                 && item.close === inpData.position.close))
-    console.log("filteredVal",inpData,filteredVal)
     if (filteredVal.length > 0 ){
       insertorUpdPortfolio(inpData.userId,inpData.stock,filteredVal)
     }else{
@@ -293,14 +292,16 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
           }}
         }).then(data => response = data[0]) 
     }catch (error) {
-        console.log("deleteStockPortfolio - Error",error)
+        console.log("getCompanyName - Error",error)
     }
     return response
  }
 
  const enrichCacheWithData = async (inpVal) =>{
     let compName = await getCompanyName(inpVal["symbol"])
-    inpVal.companyname = compName.title
+    if (compName){
+      inpVal.companyname = compName.title
+    }
     return inpVal
  }
 
@@ -314,7 +315,6 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
  }
 
  const clearBatchFromCache = (inpKey) =>{
-  console.log("key to delete",inpKey) 
   let cacheitems = require("../servercache/cacheitemsredis")
   cacheitems.delCachedKey(inpKey)
  }
