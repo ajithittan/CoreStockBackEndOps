@@ -118,7 +118,7 @@ const getDatesinBatch = async (arrofStks) =>{
           await checkAndInsertIntoStockMaster(stockprice[0].symbol)
           count++
         }catch(error){
-          console.log("updateAllStockPrices - Error when updateAllStockPrices",error,stockprice[0].symbol)
+          console.log("updateAllStockPrices - Error when updateAllStockPrices",error,stockprice)
         }
       }
     )
@@ -337,4 +337,30 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
     }
  }
 
-module.exports = {updStockPrices,processUserStockPositions,deleteUserStockPosition,extractQuotesAndNormalize};
+ const updateEachStockSECData = async (stkSym) =>{
+    const fetch = require("node-fetch");
+    let response
+    try{
+      await fetch(urlconf.HOST + 'extsrcs/companyfacts/recordonlinefacts/' + stkSym , {method:'post', 
+      headers: { 'Content-Type': 'application/json' }})
+      .then(res => res.json())
+      .then(json => {response=json});
+    }
+    catch (err){
+      console.log(err)
+    } 
+ }
+
+ const delay = ms => new Promise(res => setTimeout(res, ms));
+
+ const updLatestCompanySecFacts = async (stocks) => {
+    console.log("updLatestCompanySecFacts - for processing",stocks)
+    for (let i=0;i<stocks.length;i++){
+      updateEachStockSECData(stocks[i])
+      if (i%parseInt(process.env.LIMIT_OF_SEC_REQUESTS) === 0){
+        await delay(4000)
+      }
+    }
+ }
+
+module.exports = {updStockPrices,processUserStockPositions,deleteUserStockPosition,extractQuotesAndNormalize,updLatestCompanySecFacts};

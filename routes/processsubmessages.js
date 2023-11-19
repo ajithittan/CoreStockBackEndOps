@@ -49,4 +49,16 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
     }
     return res.status(200).send(response);
   });
+  app.post('/api/processsubmsgs/updlatestsecdata', async (req, res) => {
+    let response
+    try{
+      let masterstkops = require('../server/stockmaster');
+      response = await masterstkops.updLatestCompanySecFacts(req.body.stocks)
+    }
+    catch (err){
+      console.log(err)
+      return res.status(201).send(false);
+    }
+    return res.status(200).send(response);
+  });
 }
