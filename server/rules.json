@@ -1,0 +1,6 @@
+{
+  "rules":[
+    {"1":{"type":"CANDLE","params":["BULLISH","BEARISH"]}},
+    {"2":{"type":"RSI","params":[{"period":14,"threshold":[30,35]}]}}
+  ]
+}
