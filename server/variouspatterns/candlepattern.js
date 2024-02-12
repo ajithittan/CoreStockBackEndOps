@@ -24,10 +24,11 @@ const checkBullishCandlePattern = async (stock,dur,tp) =>{
                     }
                 })        
                 if (matchedPatterns.length > 0){
-                    response.type=tp + "_BULLISH"
+                    response.type=tp
                     response.bullish=true
                     response.stock = stock
                     response.duration = dur
+                    response.date = latestPattern["date"]
                     response.bullishpatterns = matchedPatterns
                 }
             }
