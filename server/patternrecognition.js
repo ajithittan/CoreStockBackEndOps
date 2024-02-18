@@ -12,6 +12,9 @@ const getFunctionForPattern = (patternType) => {
     }else if(patternType === "MACD"){
         const patternFn = require("./variouspatterns/macdpattern")
         return patternFn
+    }else if(patternType === "OBV"){
+        const patternFn = require("./variouspatterns/volpattern")
+        return patternFn
     }
 }
 
@@ -21,9 +24,11 @@ const getPatternsToRun = async () =>{
             {"type":"RSI","params":[{"BULLISH":[0,35],"period":14,"duration":12},
                                     {"BEARISH":[70,100],"period":14,"duration":12},]},
             {"type":"BB","params":[{"BULLISH":["lower","middle"],"period":50,"duration":12},
-                                  {"BEARISH":["upper"],"period":50,"duration":12},]},
+                                    {"BEARISH":["upper"],"period":50,"duration":12},]},
             {"type":"MACD","params":[{"BULLISH":[1,2,3],"period":26,"duration":12},
-                                    {"BEARISH":[0],"period":50,"duration":12},]}]
+                                    {"BEARISH":[0],"period":50,"duration":12},]},
+            {"type":"OBV","params":[{"BULLISH":[1],"period":10,"duration":12},
+                                    {"BEARISH":[0],"period":10,"duration":12},]}]
 }
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
