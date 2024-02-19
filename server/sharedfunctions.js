@@ -23,13 +23,36 @@ const getAllExtSectorsAndStocks = async () => {
     return dbresponse
 }
 
+const checkIfPatternExistsForDay = async (stock,date) => {
+  var initModels = require("../models/init-models"); 
+  var models = initModels(sequelize);
+  var extsectorstks = models.stockpatternsformed
+  let dbresponse = []
+  try{
+    await extsectorstks.findAll({where: {
+      symbol: {[Op.eq] : stock},
+      date: {[Op.eq] : date}
+        },raw : true
+    }).then(data => dbresponse=data)
+  }catch(error){
+    console.log("addStockPatterns - Error when adding patterns",stock,date,error)
+  }
+  return dbresponse.length
+}
+
 const addStockPatterns = async (stock,date,pattern) => {
   var initModels = require("../models/init-models"); 
   var models = initModels(sequelize);
   var extsectorstks = models.stockpatternsformed
   let dbresponse = []
   try{
-    retval = await extsectorstks.create({'symbol':stock,'date':date,'stockpatterns':pattern})
+    let checkIfdataexists = await checkIfPatternExistsForDay(stock,date)
+    if (checkIfdataexists){
+      console.log("UPDATED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",stock,date)
+      await extsectorstks.update({'stockpatterns':pattern},{where:{'symbol':stock,'date':date}})
+    }else{
+      retval = await extsectorstks.create({'symbol':stock,'date':date,'stockpatterns':pattern})
+    }
   }catch(error){
     console.log("addStockPatterns - Error when adding patterns",error)
   }
