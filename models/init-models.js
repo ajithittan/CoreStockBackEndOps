@@ -20,6 +20,7 @@ var _userstockpositions = require("./userstockpositions")
 var _userportfolio = require("./userportfolio")
 var _stockcik = require("./stockcik")
 var _stocksectorsexternal = require("./stocksectorsexternal")
+var _stockpatternsformed = require("./stockpatternsformed")
 
 function initModels(sequelize) {
   var stockindicatorparams = _stockindicatorparams(sequelize, DataTypes);
@@ -43,8 +44,8 @@ function initModels(sequelize) {
   var userportfolio = _userportfolio(sequelize, DataTypes);
   var stockcik = _stockcik(sequelize, DataTypes);
   var stocksectorsexternal = _stocksectorsexternal(sequelize, DataTypes);
+  var stockpatternsformed = _stockpatternsformed(sequelize, DataTypes);
   
-
   return {
     stockindicatorparams,
     stockindicators,
@@ -66,7 +67,8 @@ function initModels(sequelize) {
     userstockpositions,
     userportfolio,
     stockcik,
-    stocksectorsexternal
+    stocksectorsexternal,
+    stockpatternsformed
   };
 }
 module.exports = initModels;

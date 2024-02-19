@@ -20,7 +20,7 @@ const checkBuyOBVVolPattern = async (tp,stock,dur,period,range) =>{
                     response.duration = dur
                     response.date = latestPattern["date"]
                     response.bullishpatterns = [String(Boolean(value))]
-                    console.log("Latest OBV Vol Pattern",Boolean(value))
+                    //console.log("Latest OBV Vol Pattern",Boolean(value))
                 }
             }
         });

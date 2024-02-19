@@ -20,7 +20,7 @@ const checkBuyBBPattern = async (tp,stock,dur,period,range) =>{
                     response.duration = dur
                     response.date = latestPattern["date"]
                     response.bullishpatterns = [value]
-                    console.log("Latest Bollinger Band Pattern",response)
+                    //console.log("Latest Bollinger Band Pattern",response)
                 }
             }
         });

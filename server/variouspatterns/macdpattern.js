@@ -20,7 +20,7 @@ const checkBuyMACDPattern = async (tp,stock,dur,period,range) =>{
                     response.duration = dur
                     response.date = latestPattern["date"]
                     response.bullishpatterns = ["CrossOver-" + value]
-                    console.log("Latest MACD Pattern",response)
+                    //console.log("Latest MACD Pattern",response)
                 }
             }
         });

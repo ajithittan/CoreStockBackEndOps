@@ -20,7 +20,7 @@ const checkBullishCandlePattern = async (stock,dur,tp) =>{
                 bullishPatterns.forEach(item =>{
                     if (latestPattern[item] > 0){
                         matchedPatterns.push(item)
-                        console.log("found pattern > 0" , latestPattern[item], item,stock)
+                        //console.log("found pattern > 0" , latestPattern[item], item,stock)
                     }
                 })        
                 if (matchedPatterns.length > 0){

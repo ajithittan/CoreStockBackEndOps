@@ -23,4 +23,17 @@ const getAllExtSectorsAndStocks = async () => {
     return dbresponse
 }
 
-module.exports={getAllExtSectorsAndStocks}
+const addStockPatterns = async (stock,date,pattern) => {
+  var initModels = require("../models/init-models"); 
+  var models = initModels(sequelize);
+  var extsectorstks = models.stockpatternsformed
+  let dbresponse = []
+  try{
+    retval = await extsectorstks.create({'symbol':stock,'date':date,'stockpatterns':pattern})
+  }catch(error){
+    console.log("addStockPatterns - Error when adding patterns",error)
+  }
+  return dbresponse
+}
+
+module.exports={getAllExtSectorsAndStocks,addStockPatterns}

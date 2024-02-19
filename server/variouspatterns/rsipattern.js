@@ -20,7 +20,7 @@ const checkBuyRsiPattern = async (tp,stock,dur,period,range) =>{
                     response.duration = dur
                     response.date = latestPattern["date"]
                     response.bullishpatterns = [value]
-                    console.log("latestPatternlatestPattern",response)
+                    //console.log("latestPatternlatestPattern",response)
                 }
             }
         });

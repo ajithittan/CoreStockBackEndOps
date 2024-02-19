@@ -31,6 +31,12 @@ const getPatternsToRun = async () =>{
                                     {"BEARISH":[0],"period":10,"duration":12},]}]
 }
 
+const getPatternRulesToWatch = async () =>{
+    return [
+        {"type":"count","ruleparam":3,"priority":1}
+    ]
+}
+
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 const startPatternRecognition = async () =>{
@@ -62,11 +68,30 @@ const storePattern = async (patternToStore) =>{
             await cacheitems.delCachedKey(cacheKey)
             currcache = currcache.filter(item => item.type !== patternToStore.type)
             currcache.push(patternToStore)
+            validateAndAddToWatchList(currcache)
         }else{
             currcache = [patternToStore]
         }
         cacheitems.setCacheWithTtl(cacheKey,currcache,36000)  
     }
+}
+
+const addToWatchList = async (patternToAdd) =>{
+    console.log("patternToAdd",patternToAdd)
+    let shrdFns = require("./sharedfunctions")
+    shrdFns.addStockPatterns(patternToAdd[0].stock,patternToAdd[0].date,patternToAdd)
+}
+
+const validateAndAddToWatchList = async (allPatterns) =>{
+    const rules = await getPatternRulesToWatch()
+    const patternRules = require("./patternrules")
+    rules.forEach(rule =>{
+        patternRules.getPatternRuleFunction(rule.type).then(resFn => resFn(allPatterns,rule)).then(storeData => {
+            if (storeData){
+                addToWatchList(allPatterns)
+            }
+        })
+    })
 }
 
 const checkAndRunPattern = async (pattern,stock) => {
