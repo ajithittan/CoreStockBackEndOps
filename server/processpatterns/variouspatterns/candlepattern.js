@@ -1,8 +1,8 @@
-const URLConfig = require("../../config/url.config");
+const URLConfig = require("../../../config/url.config");
 const urlconf = new URLConfig()
 const PRED_PATTERN_URL = urlconf.PRED_PATTERN
 
-const checkBullishCandlePattern = async (stock,dur,tp) =>{
+const checkBullishCandlePattern = async (stock,dur,inpDate,tp) =>{
     const bullishPatterns = [
                             "CDLHAMMER","CDLINVERTEDHAMMER","CDLENGULFING","CDLPIERCING","CDLMORNINGSTAR",
                             "CDLMORNINGDOJISTAR","CDLTRISTAR","CDLHARAMI","CDLHARAMICROSS","CDLDOJI","CDLABANDONEDBABY",
@@ -15,7 +15,8 @@ const checkBullishCandlePattern = async (stock,dur,tp) =>{
       .then(res => res.json())
       .then(json => {
             if (!JSON.parse(json)["error"]){
-                let latestPattern = JSON.parse(json).pop()
+                let patrcn = require("../patterncommon")
+                let latestPattern = patrcn.getPatternForADate(JSON.parse(json),inpDate)
                 let matchedPatterns = []
                 bullishPatterns.forEach(item =>{
                     if (latestPattern[item] > 0){
@@ -48,12 +49,12 @@ const checkForACandlePattern = (stock) =>{
 
 }
 
-const mainPattern = async (pattern,stock,storefunction) =>{
+const mainPattern = async (pattern,stock,inpDate,storefunction) =>{
     let duration = 1
     if (pattern && pattern.params.length > 0){
             pattern.params.forEach(async element => {
             if (element === "BULLISH"){
-                checkBullishCandlePattern(stock,duration,pattern.type).then(retval => storefunction(retval))
+                checkBullishCandlePattern(stock,duration,inpDate,pattern.type).then(retval => storefunction(retval))
             }
         });
     }

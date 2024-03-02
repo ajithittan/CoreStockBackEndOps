@@ -76,7 +76,19 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
   app.post('/api/processsubmsgs/initiatepatternrecog', async (req, res) => {
     let response = []
     try{
-      var masterstkops = require('../server/patternrecognition');
+      var masterstkops = require('../server/processpatterns/patternrecognition');
+      response = await masterstkops.startPatternRecognition()
+    }
+    catch (err){
+      console.log(err)
+      return res.status(201).send(false);
+    }
+    return res.status(200).send(response);
+  });
+  app.post('/api/processsubmsgs/initiatepatternrecog', async (req, res) => {
+    let response = []
+    try{
+      var masterstkops = require('../server/processpatterns/patternrecognition');
       response = await masterstkops.startPatternRecognition()
     }
     catch (err){
