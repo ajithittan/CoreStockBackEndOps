@@ -16,7 +16,7 @@ const checkBuyDIADXPattern = async (tp,stock,inpDate,dur,period,range) =>{
                 let value = latestPattern[key]
                 let key1 = "ADX_" + period
                 let value1 = latestPattern[key1]
-                if (range[2] >= value1){
+                if (range[0] === value && range[2] >= value1){
                     response.type=tp + "_" + period
                     response.bullish=true
                     response.stock = stock
