@@ -18,6 +18,9 @@ const getFunctionForPattern = (patternType) => {
     }else if(patternType === "DIADX"){
         const patternFn = require("./variouspatterns/diadxpattern")
         return patternFn
+    }else if(patternType === "ADOSC"){
+        const patternFn = require("./variouspatterns/adoscvolpattern")
+        return patternFn
     }
 }
 
@@ -30,10 +33,13 @@ const getPatternsToRun = async () =>{
                                     {"BEARISH":["upper"],"period":50,"duration":12},]},
             {"type":"MACD","params":[{"BULLISH":[1,2,3],"period":26,"duration":12},
                                     {"BEARISH":[0],"period":26,"duration":12},]},
-            {"type":"OBV","params":[{"BULLISH":[1],"period":14,"duration":12},
-                                    {"BEARISH":[0],"period":14,"duration":12},]},
-            {"type":"DIADX","params":[{"BULLISH":[1,23],"period":14,"duration":12},
-                                    {"BEARISH":[0,23],"period":14,"duration":12},]}]
+            //{"type":"OBV","params":[{"BULLISH":[1],"period":14,"duration":12},
+                                    //{"BEARISH":[0],"period":14,"duration":12},]}
+            {"type":"ADOSC","params":[{"BULLISH":[-5,-4,-3,-2,-1,1,2],"period":14,"duration":12},
+                                    {"BEARISH":[0],"period":14,"duration":12},]}                                    
+            ,{"type":"DIADX","params":[{"BULLISH":[1,23],"period":14,"duration":12},
+                                    {"BEARISH":[0,23],"period":14,"duration":12},]}
+            ]
 }
 
 const getPatternRulesToWatch = async () =>{
