@@ -21,6 +21,9 @@ const getFunctionForPattern = (patternType) => {
     }else if(patternType === "ADOSC"){
         const patternFn = require("./variouspatterns/adoscvolpattern")
         return patternFn
+    }else if(patternType === "CLASS_MDL"){
+        const patternFn = require("./variouspatterns/classifiermodel")
+        return patternFn
     }
 }
 
@@ -38,14 +41,15 @@ const getPatternsToRun = async () =>{
             {"type":"ADOSC","params":[{"BULLISH":[-5,-4,-3,-2,-1,1,2],"period":14,"duration":12},
                                     {"BEARISH":[0],"period":14,"duration":12},]}                                    
             ,{"type":"DIADX","params":[{"BULLISH":[1,23],"period":14,"duration":12},
-                                    {"BEARISH":[0,23],"period":14,"duration":12},]}
+                                    {"BEARISH":[0,23],"period":14,"duration":12},]},
+            {"type":"CLASS_MDL","params":{
+                'daysAhead': 8, 
+                'features': [{'feature': 'BB', 'value': '50'},{'feature': 'MACD', 'value': '14'}, 
+                {'feature': 'DI', 'value': '14'},{'feature': 'ADX', 'value': '14'},{'feature': 'CPER'},
+                {'feature': 'RSI', 'value': '14'}], 
+                'predictlastdays': 60,
+                'model':"KNNCLASS"}}                                        
             ]
-}
-
-const getPatternRulesToWatch = async () =>{
-    return [
-        {"type":"count","ruleparam":3,"priority":1}
-    ]
 }
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
@@ -67,6 +71,9 @@ const loopThroughStocks = async (pattern,extSecStks,delayattr,inpDate) =>{
     for(let i=0;i<extSecStks.length;i++){
         await delay(delayattr)
         await checkAndRunPattern(pattern,extSecStks[i].symbol,inpDate)
+        if (pattern.type ==="CLASS_MDL"){
+            await delay(delayattr*8)
+        }
     }
 }
 
@@ -74,7 +81,7 @@ const storePattern = async (patternToStore) =>{
     if (patternToStore?.type){
         let cacheKey = "PATTERNS_" + patternToStore.stock
         let cacheitems = require("../../servercache/cacheitemsredis")
-        let currcache = await cacheitems.getCache(cacheKey)    
+        let currcache = await cacheitems.getCache(cacheKey)
         if (currcache){
             await cacheitems.delCachedKey(cacheKey)
             currcache = currcache.filter(item => item.type !== patternToStore.type)
@@ -88,18 +95,17 @@ const storePattern = async (patternToStore) =>{
 }
 
 const addToWatchList = async (patternToAdd) =>{
-    console.log("patternToAdd",patternToAdd)
     let shrdFns = require("../sharedfunctions")
     shrdFns.addStockPatterns(patternToAdd[0].stock,patternToAdd[0].date,patternToAdd)
 }
 
 const validateAndAddToWatchList = async (allPatterns) =>{
-    const rules = await getPatternRulesToWatch()
     const patternRules = require("./patternrules")
+    const rules = await patternRules.getPatternRulesToWatch()
     rules.forEach(rule =>{
-        patternRules.getPatternRuleFunction(rule.type).then(resFn => resFn(allPatterns,rule)).then(storeData => {
+        patternRules.getPatternRuleFunction(rule.type).then(resFn => resFn(allPatterns,rule)).then((storeData) => {
             if (storeData){
-                addToWatchList(allPatterns)
+                addToWatchList(storeData)
             }
         })
     })
