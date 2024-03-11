@@ -19,7 +19,7 @@ const checkKNNClassifierPattern = async (tp,stock,inpDate,params) =>{
                 response.bullish=true
                 response.stock = stock
                 response.date = moment(latestPattern["date"]).format(moment.HTML5_FMT.DATE)
-                response.bullishpatterns = [retval.upside.toFixed(2)*100 + "%" + "/" + retval.modelstats.accuracy.toFixed(2)*100 + "%"]
+                response.bullishpatterns = [retval.upside.toFixed(2)*100 + "%" + " - " + retval.modelstats.accuracy.toFixed(2)*100 + "%"]
                 console.log("checkKNNClassifierPattern",stock,response)
             }
         });
