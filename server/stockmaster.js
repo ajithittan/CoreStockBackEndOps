@@ -51,20 +51,24 @@ const insertintostkprcday = async (arrofprices) => {
  }
 
  const getStockHistDataMultiple = async (stksym,frmdate) => {
+    console.log("stksym",stksym)
     let response=[]
     let enddt = new Date()
     let dow = enddt.getDay()
+    let promisesinLoop = []
 
     if (dow === 1 || dow === 2 || dow === 3 || dow === 4 || dow === 5){
       enddt.setDate(enddt.getDate() - 1)
     }
-    const yahooFinance = require('yahoo-finance');   
-    await yahooFinance.historical({
-      symbols: stksym,
-      from: frmdate,
-      to: enddt,
-      period: 'd'
-    }).then(result => response=result)
+    const yahooFinance = require('./externalsites/yahooquotes')
+    for(let i=0;i<stksym.length;i++){
+      promisesinLoop.push(yahooFinance.getQuotesWithDates(stksym[i],frmdate,enddt).then(result => response=result))
+    }
+  
+    await Promise.all(promisesinLoop)
+                 .then(result => response = result)
+                 .catch(err => console.log("getDatesinBatch fn error",err))
+    
     return response
 }
 
@@ -199,6 +203,7 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
     for(let i=0;i<arrayofbatches.length;i++){
       console.log("processing batch #",i,arrayofbatches[i])
       retval.push(await getStockPrices(arrayofbatches[i]))
+      await delay(_.random(2000, 5000))
     }
 
     return retval
