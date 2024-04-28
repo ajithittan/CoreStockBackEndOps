@@ -66,9 +66,8 @@ const insertintostkprcday = async (arrofprices) => {
     }
   
     await Promise.all(promisesinLoop)
-                 .then(result => response = result)
+                 .then(result => response = result.filter(item => item.length > 0))
                  .catch(err => console.log("getDatesinBatch fn error",err))
-    
     return response
 }
 
