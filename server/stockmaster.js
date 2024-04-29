@@ -62,7 +62,7 @@ const insertintostkprcday = async (arrofprices) => {
     }
     const yahooFinance = require('./externalsites/yahooquotes')
     for(let i=0;i<stksym.length;i++){
-      promisesinLoop.push(yahooFinance.getQuotesWithDates(stksym[i],frmdate,enddt).then(result => response=result))
+      promisesinLoop.push(yahooFinance.getQuotesWithDates(stksym[i].trim(),frmdate,enddt).then(result => response=result))
     }
   
     await Promise.all(promisesinLoop)
