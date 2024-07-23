@@ -367,4 +367,18 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
     }
  }
 
-module.exports = {updStockPrices,processUserStockPositions,deleteUserStockPosition,extractQuotesAndNormalize,updLatestCompanySecFacts};
+ const processAllStockEoDQuotes = async () =>{
+  try{
+    const moment = require("moment");
+    var masterstkops = require('../server/externalsites/polygondata');
+    let alldata = await masterstkops.getQuotesForDate(moment().format("YYYY-MM-DD"))
+    if(alldata){
+      insertintostkprcday(alldata)
+    }
+  }
+  catch (err){
+    console.log(err)
+  } 
+ }
+
+module.exports = {processAllStockEoDQuotes,updStockPrices,processUserStockPositions,deleteUserStockPosition,extractQuotesAndNormalize,updLatestCompanySecFacts};
