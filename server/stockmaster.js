@@ -367,6 +367,28 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
     }
  }
 
+ const writeToCachePrevClose = async (keyCache,valCache) =>{
+  let cacheitems = require("../servercache/cacheprevcloseredis")
+  cacheitems.setCacheWithTtl(keyCache,valCache,36000)
+  return true
+}
+
+ const cachePreviousClose = async () =>{
+  prevdate = await getPreviousTradingDate()
+  getAllStockQuotesForEODByDate(prevdate).then(allstks => allstks.map(eachquote => 
+    writeToCachePrevClose("STK_PC_" + eachquote.symbol,eachquote.close)))
+ }
+
+ const getAllStockQuotesForEODByDate = async (inpdate) =>{
+  let polygonOps = require('../server/externalsites/polygondata')
+  return polygonOps.getQuotesForDate(inpdate)
+ }
+
+ const getPreviousTradingDate = () =>{
+  let polygonOps = require('../server/externalsites/polygondata')
+  return polygonOps.getPreviousCloseDay()
+ }
+
  const processAllStockEoDQuotes = async () =>{
   try{
     const moment = require("moment");
@@ -381,4 +403,5 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
   } 
  }
 
-module.exports = {processAllStockEoDQuotes,updStockPrices,processUserStockPositions,deleteUserStockPosition,extractQuotesAndNormalize,updLatestCompanySecFacts};
+module.exports = {processAllStockEoDQuotes,updStockPrices,processUserStockPositions,deleteUserStockPosition,
+  extractQuotesAndNormalize,updLatestCompanySecFacts,cachePreviousClose};
