@@ -10,6 +10,7 @@ const getQuotesForDate = async (forDate) => {
           });
     }catch(err){
         console.log("error in polygon function getQuotesForDate",err)
+        response=[]
     }
     return response
 }
@@ -19,6 +20,7 @@ const getPreviousCloseDay = async () =>{
     const moment = require("moment");
     let response = {}
     try{
+        //This is just using appl stock to get the previous day
         await fetch("https://api.polygon.io/v2/aggs/ticker/AAPL/prev?adjusted=true&apiKey="+process.env.API_KEY_POLYGON).then(res => res.json()).then(json => {
             response = json
             response = response["results"][0]["t"]  

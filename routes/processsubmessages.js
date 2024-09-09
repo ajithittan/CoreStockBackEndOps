@@ -121,4 +121,16 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
     }
     return res.status(200).send(response);
   });
+  app.post('/api/processsubmsgs/aggeodsyncup', async (req, res) => {
+    let response
+    try{
+      let stkqts = require('../server/processstockquotes/stockquotes');
+      await stkqts.syncDailyStockQuotes()
+    }
+    catch (err){
+      console.log(err)
+      return res.status(201).send(false);
+    }
+    return res.status(200).send(response);
+  });
 }
