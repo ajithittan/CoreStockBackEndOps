@@ -34,7 +34,7 @@ const insertintostkprcday = async (arrofprices) => {
   var stockpriceday = models.stockpriceday
 
   let transformedarr = arrofprices.map(item => ({'symbol':item.symbol,'date':item.date,'Open':item.open,
-                        'high':item.high,'low':item.low,'close':item.close,'adjclose':item.adjClose,'volume':item.volume}))
+                        'high':item.high,'low':item.low,'close':item.close,'adjclose':item.adjclose,'volume':item.volume}))
 
   await stockpriceday.bulkCreate(transformedarr, {
         updateOnDuplicate: ["close"] 
