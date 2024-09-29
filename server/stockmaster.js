@@ -313,7 +313,7 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
     let cacheitems = require("../servercache/cacheitemsredis")
     for(let i=0;i<inpQuotes.length;i++){
       let cacheKey = process.env.STOCK_INFO + inpQuotes[i]["symbol"].toUpperCase()
-      enrichCacheWithData(inpQuotes[i]).then(retval => cacheitems.setCacheWithTtl(cacheKey,retval,36000))
+      enrichCacheWithData(inpQuotes[i]).then(retval => cacheitems.setCacheWithTtl(cacheKey,retval,6000))
     }
     return true
  }
