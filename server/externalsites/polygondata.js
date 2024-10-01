@@ -5,7 +5,7 @@ const getQuotesForDate = async (forDate) => {
     try{
         await fetch("https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/"+forDate+"?adjusted=true&apiKey="+process.env.API_KEY_POLYGON).then(res => res.json()).then(json => {
             response = json
-            response = response["results"].map(obj => ({symbol: obj.T, open:obj.o,high:obj.h, low:obj.l,close:obj.c,adjClose:obj.c,
+            response = response["results"].map(obj => ({symbol: obj.T, open:obj.o,high:obj.h, low:obj.l,close:obj.c,adjclose:obj.c,
                 volume:obj.v,date:moment(obj.t).subtract(5, 'hours').format('YYYY-MM-DD')}))  
           });
     }catch(err){
