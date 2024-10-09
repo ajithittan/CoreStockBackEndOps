@@ -89,4 +89,16 @@ const syncDailyStockQuotes = async () =>{
   } 
  }
 
-module.exports = {syncDailyStockQuotes};
+ const cacheIntraDayQuotes = (inpQuotes) =>{
+   inpQuotes.map(quote => {
+     let cacheitems = require("../../servercache/cacheitemsredis")
+     cacheitems.setCacheWithTtl(process.env.CACHE_RT_STK_QT_KEY + quote.symbol,quote,process.env.CACHE_RT_STK_QT_TTL) 
+   })
+ }
+
+ const syncIntraDayStockQuotes = () => {
+    let qtsAdapter = require('./stockquotesadapter');
+    qtsAdapter.getIntraDayStockQuotes().then(allQuotes => cacheIntraDayQuotes(allQuotes))
+ }
+
+module.exports = {syncDailyStockQuotes,syncIntraDayStockQuotes};

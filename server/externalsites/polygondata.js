@@ -31,4 +31,34 @@ const getPreviousCloseDay = async () =>{
     return moment(response).subtract(5, 'hours').format("YYYY-MM-DD")
 }
 
-module.exports={getQuotesForDate,getPreviousCloseDay}
+const formatAllSnapShots = (inpData) =>{
+    return inpData["tickers"].map(item => {
+        let retval = {}
+        retval.symbol = item["ticker"]
+        retval.close = item["day"]["c"]
+        retval.volume = item["day"]["v"]
+        retval.perchange = +parseFloat(item["todaysChangePerc"]).toFixed(2)
+        retval.prevchange = +parseFloat(item["todaysChange"]).toFixed(2)
+        retval.open = item["day"]["o"]
+        retval.high = item["day"]["h"]
+        retval.low = item["day"]["l"]
+        retval.prevclose = item["prevDay"]["c"]
+        retval.updated = item["updated"]
+        return retval
+    })
+}
+
+const getCurrentSnapShotQuotesAllStocks = async () =>{
+    const fetch = require("node-fetch");
+    let response = []
+    try{
+        await fetch("https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?apiKey="+process.env.API_KEY_POLYGON).then(res => res.json()).then(json => {
+            response = formatAllSnapShots(json)
+          });
+    }catch(err){
+        console.log("error in polygon function getCurrentSnapShotQuotesAllStocks",err)
+    }
+    return response
+}
+
+module.exports={getQuotesForDate,getPreviousCloseDay,getCurrentSnapShotQuotesAllStocks}

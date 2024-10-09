@@ -10,4 +10,16 @@
   return retval
  }
 
-module.exports = {getDailyStockQuotes};
+ const getIntraDayStockQuotes = async () =>{
+  let retval = []  
+  try{
+    var polygondata = require('../../server/externalsites/polygondata');
+    retval = await polygondata.getCurrentSnapShotQuotesAllStocks()
+  }
+  catch (err){
+    console.log("Error in getIntraDayStockQuotes fn",err)
+  } 
+  return retval
+ }
+
+module.exports = {getDailyStockQuotes,getIntraDayStockQuotes};
