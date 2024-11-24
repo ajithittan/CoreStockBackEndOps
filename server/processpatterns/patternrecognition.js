@@ -68,6 +68,7 @@ const startPatternRecognition = async (inpDate) =>{
 }
 
 const loopThroughStocks = async (pattern,extSecStks,delayattr,inpDate) =>{
+    console.time('loopThroughStocks' + pattern.type);
     for(let i=0;i<extSecStks.length;i++){
         await delay(delayattr)
         await checkAndRunPattern(pattern,extSecStks[i].symbol,inpDate)
@@ -75,6 +76,7 @@ const loopThroughStocks = async (pattern,extSecStks,delayattr,inpDate) =>{
             await delay(delayattr*8)
         }
     }
+    console.timeEnd('loopThroughStocks' + pattern.type);
 }
 
 const storePattern = async (patternToStore) =>{
