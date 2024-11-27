@@ -41,15 +41,17 @@ const getPatternsToRun = async () =>{
             {"type":"ADOSC","params":[{"BULLISH":[-5,-4,-3,-2,-1,1,2],"period":14,"duration":12},
                                     {"BEARISH":[0],"period":14,"duration":12},]}                                    
             ,{"type":"DIADX","params":[{"BULLISH":[1,23],"period":14,"duration":12},
-                                    {"BEARISH":[0,23],"period":14,"duration":12},]},
-            {"type":"CLASS_MDL","params":{
-                'daysAhead': 8, 
-                'features': [{'feature': 'BB', 'value': '50'},{'feature': 'MACD', 'value': '14'}, 
-                {'feature': 'DI', 'value': '14'},{'feature': 'ADX', 'value': '14'},{'feature': 'CPER'},
-                {'feature': 'RSI', 'value': '14'}], 
-                'predictlastdays': 60,
-                'model':"KNNCLASS"}}                                        
-            ]
+                                    {"BEARISH":[0,23],"period":14,"duration":12},]}
+            /***
+                ,{"type":"CLASS_MDL","params":{
+                    'daysAhead': 8, 
+                    'features': [{'feature': 'BB', 'value': '50'},{'feature': 'MACD', 'value': '14'}, 
+                    {'feature': 'DI', 'value': '14'},{'feature': 'ADX', 'value': '14'},{'feature': 'CPER'},
+                    {'feature': 'RSI', 'value': '14'}], 
+                    'predictlastdays': 60,
+                    'model':"KNNCLASS"}}                                        
+            */                     
+            ]                                   
 }
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
