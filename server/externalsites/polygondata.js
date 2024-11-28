@@ -61,4 +61,17 @@ const getCurrentSnapShotQuotesAllStocks = async () =>{
     return response
 }
 
-module.exports={getQuotesForDate,getPreviousCloseDay,getCurrentSnapShotQuotesAllStocks}
+const isMarketClosed = async (inpDate) =>{
+    const fetch = require("node-fetch");
+    let response = []
+    try{
+        await fetch("https://api.polygon.io/v1/marketstatus/upcoming?apiKey="+process.env.API_KEY_POLYGON).then(res => res.json()).then(json => {
+            response = json.filter(item => item["date"] === inpDate && item["status"] === "closed" && item["exchange"] === "NYSE")
+          });
+    }catch(err){
+        console.log("error in polygon function isMarketClosed",inpDate,err)
+    }
+    return response.length
+}
+
+module.exports={getQuotesForDate,getPreviousCloseDay,getCurrentSnapShotQuotesAllStocks,isMarketClosed}
