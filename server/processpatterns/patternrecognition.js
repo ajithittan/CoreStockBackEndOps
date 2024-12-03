@@ -45,7 +45,7 @@ const getPatternsToRun = async () =>{
                                     {"BEARISH":[0],"period":14,"duration":12},]},
             {"type":"DIADX","params":[{"BULLISH":[1,23],"period":14,"duration":12},
                                     {"BEARISH":[0,23],"period":14,"duration":12},]},
-            {"type":"SMA_CO_50_200","params":[{"BULLISH":{type1:"SMA_50",type2:"SMA_50",success:50},"period":0,"duration":24},
+            {"type":"SMA_CO_50_200","params":[{"BULLISH":{type1:"SMA_50",type2:"SMA_50",success:5},"period":0,"duration":24},
                                     {"BEARISH":[],"period":14,"duration":12},]},
             {"type":"EMA_CO_13_48_5","params":[{"BULLISH":{type1:"EMA_13",type2:"EMA_48.5",success:5},"period":0,"duration":12},
                                     {"BEARISH":[],"period":14,"duration":12},]}                                                                        
