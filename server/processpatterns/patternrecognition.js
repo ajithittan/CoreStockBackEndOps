@@ -24,6 +24,9 @@ const getFunctionForPattern = (patternType) => {
     }else if(patternType === "CLASS_MDL"){
         const patternFn = require("./variouspatterns/classifiermodel")
         return patternFn
+    }else if(patternType === "SMA_CO_50_200" || patternType === "EMA_CO_13_48_5" ){
+        const patternFn = require("./variouspatterns/crossoverpattern")
+    return patternFn
     }
 }
 
@@ -39,9 +42,13 @@ const getPatternsToRun = async () =>{
             //{"type":"OBV","params":[{"BULLISH":[1],"period":14,"duration":12},
                                     //{"BEARISH":[0],"period":14,"duration":12},]}
             {"type":"ADOSC","params":[{"BULLISH":[-5,-4,-3,-2,-1,1,2],"period":14,"duration":12},
-                                    {"BEARISH":[0],"period":14,"duration":12},]}                                    
-            ,{"type":"DIADX","params":[{"BULLISH":[1,23],"period":14,"duration":12},
-                                    {"BEARISH":[0,23],"period":14,"duration":12},]}
+                                    {"BEARISH":[0],"period":14,"duration":12},]},
+            {"type":"DIADX","params":[{"BULLISH":[1,23],"period":14,"duration":12},
+                                    {"BEARISH":[0,23],"period":14,"duration":12},]},
+            {"type":"SMA_CO_50_200","params":[{"BULLISH":{type1:"SMA_50",type2:"SMA_50",success:50},"period":0,"duration":24},
+                                    {"BEARISH":[],"period":14,"duration":12},]},
+            {"type":"EMA_CO_13_48_5","params":[{"BULLISH":{type1:"EMA_13",type2:"EMA_48.5",success:5},"period":0,"duration":12},
+                                    {"BEARISH":[],"period":14,"duration":12},]}                                                                        
             /***
                 ,{"type":"CLASS_MDL","params":{
                     'daysAhead': 8, 
