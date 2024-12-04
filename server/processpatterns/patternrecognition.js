@@ -101,7 +101,7 @@ const storePattern = async (patternToStore) =>{
         }else{
             currcache = [patternToStore]
         }
-        cacheitems.setCacheWithTtl(cacheKey,currcache,36000)  
+        cacheitems.setCacheWithTtl(cacheKey,currcache,87000)  
     }
 }
 
