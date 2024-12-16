@@ -329,7 +329,6 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
     for (let j=0;j<arrOfUrlAppends.length;j++){
       for (let i=0;i<10;i++){
         let url = urlconf.EXTERNAL_QUOTES + arrOfUrlAppends[j] + i;
-        console.log("url",url)
         fetch(url)
         .then(res => res.json())
         .then(out =>{
