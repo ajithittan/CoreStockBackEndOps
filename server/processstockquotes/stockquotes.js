@@ -4,7 +4,7 @@ const conf = new DBConfig()
 
 const URLConfig = require("../../config/url.config.js");
 const urlconf = new URLConfig()
-const CORE_STOCK_MS = urlconf.CORE_STOCK_MS
+//const PUB_MESSAGES = urlconf.PUB_MESSAGES
 
 const Sequelize = require("sequelize");
 const sequelize = new Sequelize(conf.DB, conf.USER, conf.PASSWORD, {
@@ -93,12 +93,34 @@ const syncDailyStockQuotes = async () =>{
    inpQuotes.map(quote => {
      let cacheitems = require("../../servercache/cacheitemsredis")
      cacheitems.setCacheWithTtl(process.env.CACHE_RT_STK_QT_KEY + quote.symbol,quote,process.env.CACHE_RT_STK_QT_TTL) 
+     cacheitems.setCacheWithTtl(process.env.CACHE_RT_STK_QT_FULL_KEY + quote.symbol,quote,process.env.CACHE_RT_STK_QT_FULL_TTL) 
    })
+ }
+
+ const publishMessage =  async (type,message) =>{
+  let pubMsg = {}
+   try{
+       pubMsg.channel = type
+       pubMsg.message = message
+       const fetch = require("node-fetch"); 
+       await fetch(urlconf.PUB_MESSAGES, {method:'post', body: JSON.stringify(pubMsg), 
+                                         headers: { 'Content-Type': 'application/json' }})
+       .then(res => console.log("Message posted to redis queue",type))
+   }
+   catch (err){
+       console.log("error in publishMessage",err)
+   }
+}
+
+ //send a message to the pub/sub to initiate the flow
+ const initiateWorkFlow = (inpQuotes) =>{
+  let inpvals = inpQuotes.map(function (obj) {return ({"symbol":obj.symbol})})
+  publishMessage("INITIATE_WORK_FLOW_INTRA_DAY",inpvals)
  }
 
  const syncIntraDayStockQuotes = () => {
     let qtsAdapter = require('./stockquotesadapter');
-    qtsAdapter.getIntraDayStockQuotes().then(allQuotes => cacheIntraDayQuotes(allQuotes))
+    qtsAdapter.getIntraDayStockQuotes().then(allQuotes => {cacheIntraDayQuotes(allQuotes),initiateWorkFlow(allQuotes)})
  }
 
 module.exports = {syncDailyStockQuotes,syncIntraDayStockQuotes};

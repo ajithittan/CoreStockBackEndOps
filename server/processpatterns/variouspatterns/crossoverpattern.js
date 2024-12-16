@@ -19,7 +19,6 @@ const checkCOPattern = async (tp,stock,dur,inpDate,period,params) =>{
                 const startDate = moment(latestPattern["date"]); 
                 const endDate = moment()
                 const businessDaysDiff = startDate.businessDiff(endDate); 
-                console.log("checkCOPattern",businessDaysDiff,stock,params["type1"],params["type2"])
                 if (businessDaysDiff <= parseInt(params["success"]) && value > 0){
                     console.log("adding to cache...",businessDaysDiff,stock,params["type1"],params["type2"])
                     response.type=tp.toLowerCase()

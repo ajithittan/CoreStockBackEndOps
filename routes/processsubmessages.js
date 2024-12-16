@@ -145,4 +145,16 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
     }
     return res.status(200).send(response);
   });
+  app.post('/api/processsubmsgs/intradaywrkflow', async (req, res) => {
+    let response = []
+    try{
+      let wrkflow = require('../server/intradayworkflow/intradayworkflowmain');
+      response = await wrkflow.initiateWrkFlwIntraDay(req.body)
+    }
+    catch (err){
+      console.log(err)
+      return res.status(201).send(false);
+    }
+    return res.status(200).send(response);
+  });
 }

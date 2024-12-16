@@ -32,6 +32,7 @@ const getPreviousCloseDay = async () =>{
 }
 
 const formatAllSnapShots = (inpData) =>{
+    const moment = require("moment");
     return inpData["tickers"].map(item => {
         let retval = {}
         retval.symbol = item["ticker"]
@@ -44,6 +45,9 @@ const formatAllSnapShots = (inpData) =>{
         retval.low = item["day"]["l"]
         retval.prevclose = item["prevDay"]["c"]
         retval.updated = item["updated"]
+        retval.volumetp = item["min"]["v"]
+        //time is in nano seconds and moment needs it in milliseconds - epochtime convert
+        retval.date = moment(parseInt(item["updated"])/1000000).format("YYYY-MM-DD")
         return retval
     })
 }

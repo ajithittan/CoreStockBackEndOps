@@ -76,8 +76,39 @@ const startPatternRecognition = async (inpDate) =>{
     }
 }
 
+const patternRecogForStks = async (stks) => {
+    console.time('TIME TAKEN - patternRecogForStks' + String(stks.length));
+
+    let patterns = await getPatternsToRun()
+    let promisesforpatterns = []
+    for(let i=0;i<patterns.length;i++){
+        let delayattr = 800
+        promisesforpatterns.push(loopThroughStocksv2(patterns[i],stks,delayattr,null))
+        await delay(delayattr)
+    }
+    await Promise.all(promisesforpatterns)
+                 .then(result => retval = result)
+                 .catch(err => console.log("patternRecogForStks error",err))
+
+    console.timeEnd('TIME TAKEN - patternRecogForStks' + String(stks.length));                 
+}
+
+const loopThroughStocksv2 = async (pattern,extSecStks,delayattr,inpDate) => {
+    let promisesforstockpatterns = []
+    for(let i=0;i<extSecStks.length;i++){
+        promisesforstockpatterns.push(checkAndRunPattern(pattern,extSecStks[i].symbol,inpDate))
+        if (pattern.type ==="CLASS_MDL"){
+            await delay(delayattr*8)
+        }
+    }
+    await Promise.all(promisesforstockpatterns)
+                .then(result => retval = result)
+                .catch(err => console.log("loopThroughStocksv2 error",err))
+
+}
+
 const loopThroughStocks = async (pattern,extSecStks,delayattr,inpDate) =>{
-    console.time('loopThroughStocks' + pattern.type);
+    console.time('loopThroughStocks' + pattern.type + String(extSecStks.length));
     for(let i=0;i<extSecStks.length;i++){
         await delay(delayattr)
         await checkAndRunPattern(pattern,extSecStks[i].symbol,inpDate)
@@ -85,11 +116,12 @@ const loopThroughStocks = async (pattern,extSecStks,delayattr,inpDate) =>{
             await delay(delayattr*8)
         }
     }
-    console.timeEnd('loopThroughStocks' + pattern.type);
+    console.timeEnd('loopThroughStocks' + pattern.type + String(extSecStks.length));
 }
 
 const storePattern = async (patternToStore) =>{
     if (patternToStore?.type){
+        //console.log("patternToStorepatternToStorepatternToStore",patternToStore)
         let cacheKey = "PATTERNS_" + patternToStore.stock
         let cacheitems = require("../../servercache/cacheitemsredis")
         let currcache = await cacheitems.getCache(cacheKey)
@@ -128,4 +160,4 @@ const checkAndRunPattern = async (pattern,stock,inpDate) => {
     return true
 }
 
-module.exports={startPatternRecognition}
+module.exports={startPatternRecognition,patternRecogForStks}
