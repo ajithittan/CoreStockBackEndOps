@@ -10,7 +10,7 @@ const checkBullishCandlePattern = async (stock,dur,inpDate,tp) =>{
                             "CDLSTICKSANDWICH","CDLHOMINGPIGEON","CDLLADDERBOTTOM"]
     const fetch = require("node-fetch");
     let response = {}
-    try{
+    //try{
       await fetch(PRED_PATTERN_URL + 'predictions/patterns/candle/' + stock + "/" + dur + "/ALL")
       .then(res => res.json())
       .then(json => {
@@ -34,10 +34,10 @@ const checkBullishCandlePattern = async (stock,dur,inpDate,tp) =>{
                 }
             }
         });
-    }
+    /***}
     catch (err){
-      console.log(err)
-    }
+      //console.log(err)
+    } */
     return response
 }
 
@@ -50,15 +50,24 @@ const checkForACandlePattern = (stock) =>{
 }
 
 const mainPattern = async (pattern,stock,inpDate,storefunction) =>{
-    let duration = 1
+    let retval = true
     if (pattern && pattern.params.length > 0){
+
+        if (pattern.params[0] === "BULLISH"){
+            await checkBullishCandlePattern(stock,pattern["duration"],inpDate,pattern.type).then(retval => {storefunction(retval)})
+                .catch(err => {retval = false})
+        }
+
+            /**
             pattern.params.forEach(async element => {
             if (element === "BULLISH"){
-                checkBullishCandlePattern(stock,duration,inpDate,pattern.type).then(retval => storefunction(retval))
+                await checkBullishCandlePattern(stock,duration,inpDate,pattern.type).then(retval => {storefunction(retval);Promise.resolve(retval)})
+                    .catch(err => {console.log("in here?") ; Promise.reject(err)})
             }
-        });
+             
+        });*/
+        return retval
     }
-    return true
 }
 
 module.exports = {mainPattern}

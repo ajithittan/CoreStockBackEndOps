@@ -32,23 +32,23 @@ const getFunctionForPattern = (patternType) => {
 
 const getPatternsToRun = async () =>{
     return [
-            {"type":"CANDLE","params":["BULLISH","BEARISH"]},
-            {"type":"RSI","params":[{"BULLISH":[0,35],"period":14,"duration":12},
-                                    {"BEARISH":[70,100],"period":14,"duration":12},]},
-            {"type":"BB","params":[{"BULLISH":["lower","middle"],"period":50,"duration":12},
-                                    {"BEARISH":["upper"],"period":50,"duration":12},]},
-            {"type":"MACD","params":[{"BULLISH":[1,2,3],"period":26,"duration":12},
-                                    {"BEARISH":[0],"period":26,"duration":12},]},
-            //{"type":"OBV","params":[{"BULLISH":[1],"period":14,"duration":12},
-                                    //{"BEARISH":[0],"period":14,"duration":12},]}
-            {"type":"ADOSC","params":[{"BULLISH":[-5,-4,-3,-2,-1,1,2],"period":14,"duration":12},
-                                    {"BEARISH":[0],"period":14,"duration":12},]},
-            {"type":"DIADX","params":[{"BULLISH":[1,23],"period":14,"duration":12},
-                                    {"BEARISH":[0,23],"period":14,"duration":12},]},
+            {"type":"CANDLE","params":["BULLISH","BEARISH"],"duration":24},
+            {"type":"RSI","params":[{"BULLISH":[0,35],"period":14,"duration":24},
+                                    {"BEARISH":[70,100],"period":14,"duration":24},]},
+            {"type":"BB","params":[{"BULLISH":["lower","middle"],"period":50,"duration":24},
+                                    {"BEARISH":["upper"],"period":50,"duration":24},]},
+            {"type":"MACD","params":[{"BULLISH":[1,2,3],"period":26,"duration":24},
+                                    {"BEARISH":[0],"period":26,"duration":24},]},
+            //{"type":"OBV","params":[{"BULLISH":[1],"period":14,"duration":24},
+                                    //{"BEARISH":[0],"period":14,"duration":24},]}
+            {"type":"ADOSC","params":[{"BULLISH":[-5,-4,-3,-2,-1,1,2],"period":14,"duration":24},
+                                    {"BEARISH":[0],"period":14,"duration":24},]},
+            {"type":"DIADX","params":[{"BULLISH":[1,23],"period":14,"duration":24},
+                                    {"BEARISH":[0,23],"period":14,"duration":24},]},
             {"type":"SMA_CO_50_200","params":[{"BULLISH":{type1:"SMA_50",type2:"SMA_50",success:5},"period":0,"duration":24},
-                                    {"BEARISH":[],"period":14,"duration":12},]},
-            {"type":"EMA_CO_13_48_5","params":[{"BULLISH":{type1:"EMA_13",type2:"EMA_48.5",success:5},"period":0,"duration":12},
-                                    {"BEARISH":[],"period":14,"duration":12},]}                                                                        
+                                    {"BEARISH":[],"period":14,"duration":24},]},
+            {"type":"EMA_CO_13_48_5","params":[{"BULLISH":{type1:"EMA_13",type2:"EMA_48.5",success:5},"period":0,"duration":24},
+                                    {"BEARISH":[],"period":14,"duration":24},]}                                                                        
             /***
                 ,{"type":"CLASS_MDL","params":{
                     'daysAhead': 8, 
@@ -86,9 +86,8 @@ const patternRecogForStks = async (stks) => {
         promisesforpatterns.push(loopThroughStocksv2(patterns[i],stks,delayattr,null))
         await delay(delayattr)
     }
-    await Promise.all(promisesforpatterns)
-                 .then(result => retval = result)
-                 .catch(err => console.log("patternRecogForStks error",err))
+    let promises = await Promise.allSettled(promisesforpatterns)
+    //console.log("promises - patternRecogForStks",promises)
 
     console.timeEnd('TIME TAKEN - patternRecogForStks' + String(stks.length));                 
 }
@@ -101,10 +100,9 @@ const loopThroughStocksv2 = async (pattern,extSecStks,delayattr,inpDate) => {
             await delay(delayattr*8)
         }
     }
-    await Promise.all(promisesforstockpatterns)
-                .then(result => retval = result)
-                .catch(err => console.log("loopThroughStocksv2 error",err))
-
+    let promises = await Promise.allSettled(promisesforstockpatterns)
+    console.log("Rejected promises - loopThroughStocksv2",promises.filter(item => item["status"] === "rejected").length, 
+                " ---- " , promises.filter(item => item["status"] === "rejected"))
 }
 
 const loopThroughStocks = async (pattern,extSecStks,delayattr,inpDate) =>{
@@ -156,8 +154,13 @@ const validateAndAddToWatchList = async (allPatterns) =>{
 
 const checkAndRunPattern = async (pattern,stock,inpDate) => {
     const fnToRun = getFunctionForPattern(pattern.type)
-    fnToRun.mainPattern(pattern,stock,inpDate,storePattern)
-    return true
+    let retval = await fnToRun.mainPattern(pattern,stock,inpDate,storePattern)
+    if (retval){
+        Promise.resolve({stock:stock,pattern:pattern.type})
+    }else{
+        return Promise.reject({stock:stock,pattern:pattern.type})
+    }
+    
 }
 
 module.exports={startPatternRecognition,patternRecogForStks}

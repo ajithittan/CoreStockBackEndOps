@@ -5,7 +5,7 @@ const PRED_PATTERN_URL = urlconf.PRED_PATTERN
 const checkBuyDIADXPattern = async (tp,stock,inpDate,dur,period,range) =>{
     const fetch = require("node-fetch");
     let response = {}
-    try{
+    //try{
       await fetch(PRED_PATTERN_URL + 'predictions/patterns/adxdi/' + stock + "/" + dur + "/" + period)
       .then(res => res.json())
       .then(json => {
@@ -27,10 +27,10 @@ const checkBuyDIADXPattern = async (tp,stock,inpDate,dur,period,range) =>{
                 }
             }
         });
-    }
+    /***}
     catch (err){
-      console.log(err)
-    }
+      //console.log(err)
+    } */
     return response
 }
 
@@ -39,15 +39,13 @@ const checkBearishCandlePattern = (stock) =>{
 }
 
 const mainPattern = async (pattern,stock,inpDate,storefunction) =>{
+    let retval = true
     if (pattern && pattern.params.length > 0){
-            pattern.params.forEach(async element => {
-            if (element["BULLISH"]){
-                checkBuyDIADXPattern(pattern["type"],stock,inpDate,element["duration"],element["period"],element["BULLISH"]
-                ).then(retval => storefunction(retval))
-            }
-        });
-    }
-    return true
+        if (pattern.params[0]["BULLISH"]){
+            await checkBuyDIADXPattern(pattern["type"],stock,inpDate,pattern.params[0]["duration"],pattern.params[0]["period"],
+            pattern.params[0]["BULLISH"]).then(retval => storefunction(retval)).catch(err => {retval = false})
+        return retval
+    }}
 }
 
 module.exports = {mainPattern}

@@ -3,3 +3,4 @@ curl -X POST http://localhost:5400/api/processsubmsgs/intradaysnaphots
 curl to process stocks:
 =======================
 curl -X POST  -H "Content-Type: application/json" -d '[{"symbol": "NVDA"}, {"symbol": "AMD"},{"symbol": "C"},{"symbol": "AAPL"},{"symbol": "BAC"}]' http://127.0.0.1:5400/api/processsubmsgs/intradaywrkflow
+curl -X POST http://localhost:5400/api/processsubmsgs/cachebasicstockprice

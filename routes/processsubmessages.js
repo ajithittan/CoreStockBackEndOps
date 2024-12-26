@@ -157,4 +157,16 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
     }
     return res.status(200).send(response);
   });
+  app.post('/api/processsubmsgs/cachebasicstockprice', async (req, res) => {
+    let response = []
+    try{
+      let masterstkops = require('../server/stockmaster');
+      await masterstkops.cacheBasicStockPrice()
+    }
+    catch (err){
+      console.log(err)
+      return res.status(500).send(false);
+    }
+    return res.status(200).send(response);
+  });
 }

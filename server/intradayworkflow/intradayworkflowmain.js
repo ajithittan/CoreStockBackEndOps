@@ -9,7 +9,7 @@ const getFunctionToRun = (inpType) =>{
 const workflowseq = [{
     "type":"indicators",
     "function": getFunctionToRun("indicators"),
-    "stkcounts": 100
+    "stkcounts": 125
 }]
 
 const checkIfFnIsStillOn = async (inpTp) =>{
@@ -33,6 +33,7 @@ const stopFunction= async (inpTp) =>{
 const startProcessing = async (inpParams,inpStks) => {
     const _= require("lodash") 
     let st = Date.now()
+    console.log("inpParamsinpParams",inpStks)
     try {
         let arrayofbatches = _.chunk(inpStks,inpParams["stkcounts"])
         await startFunction(inpParams["type"])
@@ -55,12 +56,12 @@ const timeTakenByFunction = async (fn,st,et) =>{
 const initiateWrkFlwIntraDay = async (inpStks) => {
     for(let i=0;i<workflowseq.length;i++){
         await checkIfFnIsStillOn(workflowseq[i]["type"]).then(retval => {
-            console.log("retvalretvalretvalretval",retval) 
             if (retval){
+                //stopFunction(workflowseq[i]["type"])
                 console.log("job still running.... - ",workflowseq[i]["type"])
             }else{
                 console.log("start job.... - ",workflowseq[i]["type"])
-                startProcessing(workflowseq[i],inpStks)                
+                //startProcessing(workflowseq[i],inpStks)                
             }}
         )
     }

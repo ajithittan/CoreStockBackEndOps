@@ -9,6 +9,7 @@ function TimeTakenByFn (fnName,strTime,endTime) {
 TimeTakenByFn.prototype.storeToCache = async function  () {
     let cacheitems = require("../../servercache/cacheitemsredis")
     let timeTaken = (this.endTime - this.strTime)/1000
+    console.log("time taken by function is ",this.fnName," --- ",timeTaken)
     return cacheitems.setCacheWithTtl(process.env.CACHE_KEY_FN_TIME + this.fnName,timeTaken,process.env.CACHE_KEY_FN_TIME_TTL)
 };
 

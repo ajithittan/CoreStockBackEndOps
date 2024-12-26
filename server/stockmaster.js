@@ -5,6 +5,7 @@ const conf = new DBConfig()
 const URLConfig = require("../config/url.config.js");
 const urlconf = new URLConfig()
 const CORE_STOCK_MS = urlconf.CORE_STOCK_MS
+const PRED_PATTERN_URL = urlconf.PRED_PATTERN
 
 const Sequelize = require("sequelize");
 const sequelize = new Sequelize(conf.DB, conf.USER, conf.PASSWORD, {
@@ -202,7 +203,7 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
     for(let i=0;i<arrayofbatches.length;i++){
       console.log("processing batch #",i,arrayofbatches[i])
       retval.push(await getStockPrices(arrayofbatches[i]))
-      await delay(_.random(2000, 5000))
+      await delay(_.random(1000, 4000))
     }
 
     return retval
@@ -379,6 +380,48 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
     writeToCachePrevClose("STK_PC_" + eachquote.symbol,eachquote.close)))
  }
 
+ const loadBasicStockPriceToCache = async (stock) =>{
+  const fetch = require("node-fetch");
+  let response = false
+  try {
+    await fetch(PRED_PATTERN_URL + 'predictions/preprocess/' + stock, {method:'post', 
+    headers: { 'Content-Type': 'application/json' }})
+    .then(res => res.json())
+    .then(json => {
+      response = Boolean(json);
+      //console.log("return from api call for - ",stock," is ",json)
+    });
+  } catch (error) {
+    console.log("error in loadBasicStockPriceToCache - ",stock,error)
+  }
+  return response  
+ }
+
+ const loopThruStocks = async (inpstks) =>{
+  let errstks = []
+  for (let i=0;i<inpstks.length;i++){
+    let retval = await loadBasicStockPriceToCache(inpstks[i])
+    if (!retval){
+      errstks.push(inpstks[i])
+    }
+  }
+  return errstks
+ }
+
+ const processBasicStockPrice = async () => {
+    prevdate = await getPreviousTradingDate()
+    let allstks = await getAllStockQuotesForEODByDate(prevdate)
+    allstks = allstks.map(item => item.symbol)
+    let errstks = await loopThruStocks(allstks)
+    console.log(errstks)
+    await updStockPrices(errstks)
+ }
+
+ const cacheBasicStockPrice = async () =>{
+  let deco = require("../server/Util/decortorcalctimetaken")
+  deco.TimeTakenDecorator(processBasicStockPrice,"basicstockprice")()
+ }
+ 
  const getAllStockQuotesForEODByDate = async (inpdate) =>{
   let polygonOps = require('../server/externalsites/polygondata')
   return polygonOps.getQuotesForDate(inpdate)
@@ -404,4 +447,4 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
  }
 
 module.exports = {processAllStockEoDQuotes,updStockPrices,processUserStockPositions,deleteUserStockPosition,
-  extractQuotesAndNormalize,updLatestCompanySecFacts,cachePreviousClose};
+  extractQuotesAndNormalize,updLatestCompanySecFacts,cachePreviousClose,cacheBasicStockPrice};

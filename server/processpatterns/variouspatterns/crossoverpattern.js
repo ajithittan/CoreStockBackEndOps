@@ -6,7 +6,7 @@ const checkCOPattern = async (tp,stock,dur,inpDate,period,params) =>{
     const fetch = require("node-fetch");
     let moment = require("moment-business-days")
     let response = {}
-    try{
+    //try{
       await fetch(PRED_PATTERN_URL + 'predictions/patterns/crossovers/' + stock + "/" + params["type1"] + "/" + 
                     params["type2"] + "/" + dur)
       .then(res => res.json())
@@ -31,23 +31,22 @@ const checkCOPattern = async (tp,stock,dur,inpDate,period,params) =>{
                 }
             }
         });
-    }
+    /***}
     catch (err){
-      console.log(err)
-    }
+      //console.log(err)
+    } */
     return response
 }
 
 const mainPattern = async (pattern,stock,inpDate,storefunction) =>{
+    let retval = true
     if (pattern && pattern.params.length > 0){
-            pattern.params.forEach(async element => {
-            if (element["BULLISH"]){
-                checkCOPattern(pattern["type"],stock,element["duration"],inpDate,element["period"],element["BULLISH"]
-                ).then(retval => storefunction(retval))
-            }
-        });
-    }
-    return true
+
+        if (pattern.params[0]["BULLISH"]){
+            await checkCOPattern(pattern["type"],stock,pattern.params[0]["duration"],inpDate,pattern.params[0]["period"]
+            ,pattern.params[0]["BULLISH"]).then(retval => storefunction(retval)).catch(err => {retval = false})
+        return retval
+    }}
 }
 
 module.exports = {mainPattern}
