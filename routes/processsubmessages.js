@@ -101,11 +101,12 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
     let response
     try{
       var masterstkops = require('../server/stockmaster');
-      await masterstkops.processAllStockEoDQuotes()
+      response = await masterstkops.processAllStockEoDQuotes()
+      console.log("responseresponseresponseresponse",response)
     }
     catch (err){
       console.log(err)
-      return res.status(201).send(false);
+      return res.status(500).send(false);
     }
     return res.status(200).send(response);
   });
@@ -113,7 +114,7 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
     let response
     try{
       var masterstkops = require('../server/stockmaster');
-      await masterstkops.cachePreviousClose()
+      response = await masterstkops.cachePreviousClose()
     }
     catch (err){
       console.log(err)
@@ -146,7 +147,7 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
     return res.status(200).send(response);
   });
   app.post('/api/processsubmsgs/intradaywrkflow', async (req, res) => {
-    let response = []
+    let response = false
     try{
       let wrkflow = require('../server/intradayworkflow/intradayworkflowmain');
       response = await wrkflow.initiateWrkFlwIntraDay(req.body)
@@ -158,10 +159,10 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
     return res.status(200).send(response);
   });
   app.post('/api/processsubmsgs/cachebasicstockprice', async (req, res) => {
-    let response = []
+    let response = false
     try{
       let masterstkops = require('../server/stockmaster');
-      await masterstkops.cacheBasicStockPrice()
+      response = await masterstkops.cacheBasicStockPrice()
     }
     catch (err){
       console.log(err)

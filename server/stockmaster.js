@@ -37,10 +37,11 @@ const insertintostkprcday = async (arrofprices) => {
   let transformedarr = arrofprices.map(item => ({'symbol':item.symbol,'date':item.date,'Open':item.open,
                         'high':item.high,'low':item.low,'close':item.close,'adjclose':item.adjclose,'volume':item.volume}))
 
-  await stockpriceday.bulkCreate(transformedarr, {
+  let results = await stockpriceday.bulkCreate(transformedarr,{
         updateOnDuplicate: ["close"] 
   })
   await flushAllCache()
+  return results
 }
 
  const flushAllCache = async () =>{
@@ -369,14 +370,30 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
 
  const writeToCachePrevClose = async (keyCache,valCache) =>{
   let cacheitems = require("../servercache/cacheprevcloseredis")
-  cacheitems.setCacheWithTtl(keyCache,valCache,36000)
+  await cacheitems.setCacheWithTtl(keyCache,valCache,36000)
   return true
 }
 
- const cachePreviousClose = async () =>{
-  prevdate = await getPreviousTradingDate()
-  getAllStockQuotesForEODByDate(prevdate).then(allstks => allstks.map(eachquote => 
-    writeToCachePrevClose("STK_PC_" + eachquote.symbol,eachquote.close)))
+const processPreviousClose = async () =>{
+  let statusOfProcess = false
+  let returnInformation = {}
+  try {
+    prevdate = await getPreviousTradingDate()
+    let allstks = await getAllStockQuotesForEODByDate(prevdate)
+    for (let i=0;i<allstks.length;i++){
+      await writeToCachePrevClose("STK_PC_" + allstks[i].symbol,allstks[i].close)
+    }
+    statusOfProcess = true
+    returnInformation["cachedquotes"] = allstks.length
+  } catch (error) {
+    returnInformation = {'err':error}
+  }
+  return {statusOfProcess,returnInformation}
+ }
+
+const cachePreviousClose = async () =>{
+  let deco = require("../server/Util/decortorcalctimetaken")
+  return await deco.TimeTakenDecorator(processPreviousClose,"cacheprevclose")()
  }
 
  const loadBasicStockPriceToCache = async (stock) =>{
@@ -408,17 +425,26 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
  }
 
  const processBasicStockPrice = async () => {
-    prevdate = await getPreviousTradingDate()
-    let allstks = await getAllStockQuotesForEODByDate(prevdate)
-    allstks = allstks.map(item => item.symbol)
-    let errstks = await loopThruStocks(allstks)
-    console.log(errstks)
-    await updStockPrices(errstks)
+    let statusOfProcess = false
+    let returnInformation = {}
+    try {
+      prevdate = await getPreviousTradingDate()
+      let allstks = await getAllStockQuotesForEODByDate(prevdate)
+      allstks = allstks.map(item => item.symbol)
+      let errstks = await loopThruStocks(allstks)
+      returnInformation["stocksnodata"] = errstks.length || 0
+      returnInformation["loadedcache"] = allstks.length - (errstks.length || 0)
+      updStockPrices(errstks)   
+      statusOfProcess = true     
+    } catch (error) {
+      returnInformation = {'err':error}
+    }
+    return {statusOfProcess,returnInformation}
  }
 
  const cacheBasicStockPrice = async () =>{
   let deco = require("../server/Util/decortorcalctimetaken")
-  deco.TimeTakenDecorator(processBasicStockPrice,"basicstockprice")()
+  return await deco.TimeTakenDecorator(processBasicStockPrice,"basicstockprice")()
  }
  
  const getAllStockQuotesForEODByDate = async (inpdate) =>{
@@ -431,18 +457,34 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
   return polygonOps.getPreviousCloseDay()
  }
 
- const processAllStockEoDQuotes = async () =>{
+ const getAndInsertAllStockEoDQuotes = async () =>{
+  let statusOfProcess = false
+  let returnInformation = {}
   try{
     const moment = require("moment");
     var masterstkops = require('../server/externalsites/polygondata');
-    let alldata = await masterstkops.getQuotesForDate(moment().format("YYYY-MM-DD"))
-    if(alldata){
-      insertintostkprcday(alldata)
+    let alldata = await masterstkops.getQuotesForDate(moment('2024-12-26').format("YYYY-MM-DD"))
+    if(alldata && alldata.length > 0){
+      let retval = await insertintostkprcday(alldata)
+      //Check at least a thousand stocks eod data is inserted
+      if (retval && retval.length > 1000){
+        returnInformation ={'quotesinserted':retval.length,'date':moment().format("YYYY-MM-DD")}
+        statusOfProcess = true
+      }
+    }else{
+      returnInformation = {'err':"error from external site, no data",'date':moment().format("YYYY-MM-DD")}  
     }
   }
   catch (err){
-    console.log(err)
+    console.log("error in inserting data for eod stock price",err)
+    returnInformation = {'err':err,'date':moment().format("YYYY-MM-DD")}
   } 
+  return {statusOfProcess,returnInformation}
+ }
+
+ const processAllStockEoDQuotes = async () =>{
+  let deco = require("../server/Util/decortorcalctimetaken")
+  return await deco.TimeTakenDecorator(getAndInsertAllStockEoDQuotes,"allstockeodquotes")()
  }
 
 module.exports = {processAllStockEoDQuotes,updStockPrices,processUserStockPositions,deleteUserStockPosition,
