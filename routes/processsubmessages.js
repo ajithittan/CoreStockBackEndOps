@@ -138,7 +138,7 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
     let response
     try{
       let stkqts = require('../server/processstockquotes/stockquotes');
-      stkqts.syncIntraDayStockQuotes()
+      response = await stkqts.syncIntraDayStockQuotes()
     }
     catch (err){
       console.log(err)

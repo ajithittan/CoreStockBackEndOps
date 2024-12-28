@@ -89,7 +89,7 @@ const syncDailyStockQuotes = async () =>{
   } 
  }
 
- const cacheIntraDayQuotes = (inpQuotes) =>{
+ const cacheIntraDayQuotes = async (inpQuotes) =>{
    inpQuotes.map(quote => {
      let cacheitems = require("../../servercache/cacheitemsredis")
      cacheitems.setCacheWithTtl(process.env.CACHE_RT_STK_QT_KEY + quote.symbol,quote,process.env.CACHE_RT_STK_QT_TTL) 
@@ -118,9 +118,27 @@ const syncDailyStockQuotes = async () =>{
   publishMessage("INITIATE_WORK_FLOW_INTRA_DAY",inpvals)
  }
 
- const syncIntraDayStockQuotes = () => {
+ const processIntraDayStockQuotes = async () => {
+    const moment = require("moment");
+    let statusOfProcess = false
+    let returnInformation = {}
     let qtsAdapter = require('./stockquotesadapter');
-    qtsAdapter.getIntraDayStockQuotes().then(allQuotes => {cacheIntraDayQuotes(allQuotes),initiateWorkFlow(allQuotes)})
+    try {
+      let allQuotes = await qtsAdapter.getIntraDayStockQuotes()
+      await cacheIntraDayQuotes(allQuotes)
+      initiateWorkFlow(allQuotes)  
+      statusOfProcess = true
+      returnInformation = {'updatedquotes':allQuotes?.length,'date':moment().format("YYYY-MM-DD")}
+    } catch (error) {
+      returnInformation = {'err':error,'date':moment().format("YYYY-MM-DD")}
+      console.log("error in processIntraDayStockQuotes", error)
+    }
+    return {statusOfProcess,returnInformation}
  }
+
+ const syncIntraDayStockQuotes = async () => {
+  let deco = require("../Util/decortorcalctimetaken")
+  return await deco.TimeTakenDecorator(processIntraDayStockQuotes,"intradaystockprice")()
+}
 
 module.exports = {syncDailyStockQuotes,syncIntraDayStockQuotes};

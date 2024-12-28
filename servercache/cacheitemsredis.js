@@ -49,3 +49,7 @@ exports.flushAll = () =>{
 exports.delCachedKey = (key) =>{
     return redisClient.del(key)
 }
+
+exports.addToCacheStream = (streamKey,id,formattedMsg) =>{
+    return redisClient.xadd(streamKey,id,"data",formattedMsg)
+}      
