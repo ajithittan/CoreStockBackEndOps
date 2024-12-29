@@ -113,9 +113,11 @@ const syncDailyStockQuotes = async () =>{
 }
 
  //send a message to the pub/sub to initiate the flow
- const initiateWorkFlow = (inpQuotes) =>{
-  let inpvals = inpQuotes.map(function (obj) {return ({"symbol":obj.symbol})})
-  publishMessage("INITIATE_WORK_FLOW_INTRA_DAY",inpvals)
+ const initiateWorkFlow = async (inpQuotes) =>{
+    const shrdfns = require('../sharedfunctions')
+    let inpvals = inpQuotes.map(function (obj) {return ({"symbol":obj.symbol})})
+    inpvals = await shrdfns.prioritizeAndSeqStks(inpvals)
+    publishMessage("INITIATE_WORK_FLOW_INTRA_DAY",inpvals)
  }
 
  const processIntraDayStockQuotes = async () => {

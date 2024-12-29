@@ -59,4 +59,11 @@ const addStockPatterns = async (stock,date,pattern) => {
   return dbresponse
 }
 
-module.exports={getAllExtSectorsAndStocks,addStockPatterns}
+const prioritizeAndSeqStks = async (inpStks) =>{
+  let stks = await getAllExtSectorsAndStocks()
+  stks = stks.map(item => item.symbol)
+  let retval = [...inpStks.filter(item => stks.includes(item.symbol)),...inpStks.filter(item => !stks.includes(item.symbol))]
+  return retval
+}
+
+module.exports={getAllExtSectorsAndStocks,addStockPatterns,prioritizeAndSeqStks}
