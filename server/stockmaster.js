@@ -375,6 +375,7 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
 }
 
 const processPreviousClose = async () =>{
+  const moment = require("moment");
   let statusOfProcess = false
   let returnInformation = {}
   try {
@@ -385,8 +386,9 @@ const processPreviousClose = async () =>{
     }
     statusOfProcess = true
     returnInformation["cachedquotes"] = allstks.length
+    returnInformation["date"] = moment().format("YYYY-MM-DD")
   } catch (error) {
-    returnInformation = {'err':error}
+    returnInformation = {'err':error,'date':moment().format("YYYY-MM-DD")}
   }
   return {statusOfProcess,returnInformation}
  }
