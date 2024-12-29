@@ -1,5 +1,5 @@
 const getFunctionToRun = (inpType) =>{
-    if (inpType === "indicators"){
+    if (inpType === "intradayindicators"){
         let patterns = require("../processpatterns/patternrecognition")
         return patterns.patternRecogForStks
     }
@@ -7,8 +7,8 @@ const getFunctionToRun = (inpType) =>{
 
 //configure new ite,s in the workflow and it will be initiated.
 const workflowseq = [{
-    "type":"indicators",
-    "function": getFunctionToRun("indicators"),
+    "type":"intradayindicators",
+    "function": getFunctionToRun("intradayindicators"),
     "stkcounts": 125
 }]
 
@@ -31,26 +31,35 @@ const stopFunction= async (inpTp) =>{
 }
 
 const startProcessing = async (inpParams,inpStks) => {
+    const moment = require("moment");
     const _= require("lodash") 
-    let st = Date.now()
-    console.log("inpParamsinpParams",inpStks)
+    let statusOfProcess = false
+    let returnInformation = {}
+    console.log("inpParams and inpStks",inpParams,inpStks)
     try {
-        let arrayofbatches = _.chunk(inpStks,inpParams["stkcounts"])
+        //uncomment below in dev so it doesnt go crazy looking for all data
+        let arrayofbatches = _.chunk(inpStks.slice(0,20),inpParams["stkcounts"])
+        //let arrayofbatches = _.chunk(inpStks,inpParams["stkcounts"])
         await startFunction(inpParams["type"])
         for(let i=0;i<arrayofbatches.length;i++){
             await inpParams["function"](arrayofbatches[i])
         }
+        statusOfProcess = true
+        returnInformation = {'cntstocks':inpStks.length,'batches':arrayofbatches.length,'date':moment().format("YYYY-MM-DD")}
     }
+    catch (err){
+        console.log("error in startProcessing function",err)
+        returnInformation = {'err':err,'date':moment().format("YYYY-MM-DD")}
+      } 
     finally {
         await stopFunction(inpParams["type"])
-        timeTakenByFunction(inpParams["type"],st,Date.now())
     }
+    return {statusOfProcess,returnInformation}
 }
 
-const timeTakenByFunction = async (fn,st,et) =>{
-    const timeTakenObj = require("../Util/calculateTimeTaken");
-    let objtmtaken = new timeTakenObj.TimeTakenByFn(fn,st,et)
-    objtmtaken.storeToCache()
+const initiateProcessing = async (args,fn) =>{
+    let deco = require("../Util/decortorcalctimetaken")
+    return await deco.TimeTakenDecorator(startProcessing,fn)(...args)
 }
 
 const initiateWrkFlwIntraDay = async (inpStks) => {
@@ -61,7 +70,7 @@ const initiateWrkFlwIntraDay = async (inpStks) => {
                 console.log("job still running.... - ",workflowseq[i]["type"])
             }else{
                 console.log("start job.... - ",workflowseq[i]["type"])
-                //startProcessing(workflowseq[i],inpStks)                
+                initiateProcessing([workflowseq[i],inpStks],workflowseq[i]["type"])        
             }}
         )
     }

@@ -16,7 +16,7 @@ TimeTakenByFn.prototype.storeToCache = async function  () {
     summaryOfJob["tt"] = timeTaken
     summaryOfJob["rv"] = this.retInfo
     summaryOfJob["fn"] = this.fnName
-    await cacheitems.setCacheWithTtl(process.env.CACHE_KEY_FN_TIME + this.fnName,timeTaken,process.env.CACHE_KEY_FN_TIME_TTL)
+    //await cacheitems.setCacheWithTtl(process.env.CACHE_KEY_FN_TIME + this.fnName,timeTaken,process.env.CACHE_KEY_FN_TIME_TTL)
     await cacheitems.addToCacheStream(process.env.STREAM_KEY_FN_SUMMARY,parseInt(this.endTime),JSON.stringify(summaryOfJob))
     return true
 };
