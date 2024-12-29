@@ -204,7 +204,7 @@ const insertIntoStkMaster = async (stksym,stkName,stkSector,track) =>{
     for(let i=0;i<arrayofbatches.length;i++){
       console.log("processing batch #",i,arrayofbatches[i])
       retval.push(await getStockPrices(arrayofbatches[i]))
-      await delay(_.random(1000, 4000))
+      await delay(_.random(2000, 5000))
     }
 
     return retval
