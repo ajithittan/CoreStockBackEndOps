@@ -102,7 +102,6 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
     try{
       var masterstkops = require('../server/stockmaster');
       response = await masterstkops.processAllStockEoDQuotes()
-      console.log("responseresponseresponseresponse",response)
     }
     catch (err){
       console.log(err)
