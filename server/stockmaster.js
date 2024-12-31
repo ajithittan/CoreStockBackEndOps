@@ -465,7 +465,7 @@ const cachePreviousClose = async () =>{
   try{
     const moment = require("moment");
     var masterstkops = require('../server/externalsites/polygondata');
-    let alldata = await masterstkops.getQuotesForDate(moment('2024-12-26').format("YYYY-MM-DD"))
+    let alldata = await masterstkops.getQuotesForDate(moment().format("YYYY-MM-DD"))
     if(alldata && alldata.length > 0){
       let retval = await insertintostkprcday(alldata)
       //Check at least a thousand stocks eod data is inserted
