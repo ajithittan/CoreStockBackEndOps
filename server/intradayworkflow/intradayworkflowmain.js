@@ -38,8 +38,8 @@ const startProcessing = async (inpParams,inpStks) => {
     console.log("inpParams and inpStks",inpParams,inpStks)
     try {
         //uncomment below in dev so it doesnt go crazy looking for all data
-        let arrayofbatches = _.chunk(inpStks.slice(0,20),inpParams["stkcounts"])
-        //let arrayofbatches = _.chunk(inpStks,inpParams["stkcounts"])
+        //let arrayofbatches = _.chunk(inpStks.slice(0,20),inpParams["stkcounts"])
+        let arrayofbatches = _.chunk(inpStks,inpParams["stkcounts"])
         await startFunction(inpParams["type"])
         for(let i=0;i<arrayofbatches.length;i++){
             await inpParams["function"](arrayofbatches[i])
