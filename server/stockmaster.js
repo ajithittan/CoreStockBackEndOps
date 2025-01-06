@@ -433,6 +433,8 @@ const cachePreviousClose = async () =>{
       prevdate = await getPreviousTradingDate()
       let allstks = await getAllStockQuotesForEODByDate(prevdate)
       allstks = allstks.map(item => item.symbol)
+      //for testing only to keep volumes low..I know it's not the best way :)
+      //allstks = ["AAPL","AMD","C","F"]
       let errstks = await loopThruStocks(allstks)
       returnInformation["stocksnodata"] = errstks.length || 0
       returnInformation["loadedcache"] = allstks.length - (errstks.length || 0)

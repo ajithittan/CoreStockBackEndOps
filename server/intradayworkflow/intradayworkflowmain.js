@@ -1,7 +1,7 @@
 const getFunctionToRun = (inpType) =>{
     if (inpType === "intradayindicators"){
         let patterns = require("../processpatterns/patternrecognition")
-        return patterns.patternRecogForStks
+        return patterns.intradaypatternRecogForStks
     }
 }
 
@@ -9,7 +9,7 @@ const getFunctionToRun = (inpType) =>{
 const workflowseq = [{
     "type":"intradayindicators",
     "function": getFunctionToRun("intradayindicators"),
-    "stkcounts": 125
+    "stkcounts": 10
 }]
 
 const checkIfFnIsStillOn = async (inpTp) =>{

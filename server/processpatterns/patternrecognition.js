@@ -76,6 +76,13 @@ const startPatternRecognition = async (inpDate) =>{
     }
 }
 
+const intradaypatternRecogForStks = async (inpstks) =>{
+    let trgptrns = require("./variouspatterns/triggerpattern")
+    await trgptrns.triggerAllPatterns(inpstks.map(item => item.symbol))
+    await delay(5000)
+}
+
+//the below function will be obsolete.
 const patternRecogForStks = async (stks) => {
     console.time('TIME TAKEN - patternRecogForStks' + String(stks.length));
 
@@ -163,4 +170,4 @@ const checkAndRunPattern = async (pattern,stock,inpDate) => {
     
 }
 
-module.exports={startPatternRecognition,patternRecogForStks}
+module.exports={startPatternRecognition,intradaypatternRecogForStks}
