@@ -112,12 +112,32 @@ const syncDailyStockQuotes = async () =>{
    }
 }
 
+const getAllStocksFromDB = async () => {
+  let retval
+  let myCache = require('../../servercache/cacheitems')  
+  let cacheVal = myCache.getCache(process.env.CACHE_ALL_STOCKS_DB)
+  if (cacheVal){
+    console.log("found in cache")
+    retval = cacheVal
+  }else{
+      console.log("not found in cache")
+      let initModels = require("../../models/init-models"); 
+      let models = initModels(sequelize);
+      let stocklist = models.stocklist
+      await stocklist.findAll({attributes: ['symbol']}).then(data => retval=data) 
+      myCache.setCacheWithTtl(process.env.CACHE_ALL_STOCKS_DB,retval,process.env.CACHE_ALL_STOCKS_DB_TTL)
+  }
+  console.log("retval",retval.map(item => item.symbol))
+  return retval
+} 
+
  //send a message to the pub/sub to initiate the flow
  const initiateWorkFlow = async (inpQuotes) =>{
-    const shrdfns = require('../sharedfunctions')
-    let inpvals = inpQuotes.map(function (obj) {return ({"symbol":obj.symbol})})
-    inpvals = await shrdfns.prioritizeAndSeqStks(inpvals)
-    publishMessage("INITIATE_WORK_FLOW_INTRA_DAY",inpvals)
+    //const shrdfns = require('../sharedfunctions')
+    //let inpvals = inpQuotes.map(function (obj) {return ({"symbol":obj.symbol})})
+    //inpvals = await shrdfns.prioritizeAndSeqStks(inpvals)
+    let inpstks = await getAllStocksFromDB()
+    publishMessage("INITIATE_WORK_FLOW_INTRA_DAY",inpstks)
  }
 
  const processIntraDayStockQuotes = async () => {
