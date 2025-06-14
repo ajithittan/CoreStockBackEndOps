@@ -9,7 +9,7 @@ const getFunctionToRun = (inpType) =>{
 const workflowseq = [{
     "type":"intradayindicators",
     "function": getFunctionToRun("intradayindicators"),
-    "stkcounts": 10
+    "stkcounts": 100
 }]
 
 const checkIfFnIsStillOn = async (inpTp) =>{

@@ -467,6 +467,8 @@ const cachePreviousClose = async () =>{
   try{
     const moment = require("moment");
     var masterstkops = require('../server/externalsites/polygondata');
+    //let dateforprocessing = '2025-06-06'
+    //let alldata = await masterstkops.getQuotesForDate(dateforprocessing)
     let alldata = await masterstkops.getQuotesForDate(moment().format("YYYY-MM-DD"))
     if(alldata && alldata.length > 0){
       let retval = await insertintostkprcday(alldata)
@@ -491,5 +493,11 @@ const cachePreviousClose = async () =>{
   return await deco.TimeTakenDecorator(getAndInsertAllStockEoDQuotes,"allstockeodquotes")()
  }
 
+ const getAllStocksFromList = async () =>{
+  let stkquotes = require('../server/processstockquotes/stockquotes');
+  let stks = stkquotes.getAllStocksFromDB()
+  updStockPrices(stks)
+ }
+
 module.exports = {processAllStockEoDQuotes,updStockPrices,processUserStockPositions,deleteUserStockPosition,
-  extractQuotesAndNormalize,updLatestCompanySecFacts,cachePreviousClose,cacheBasicStockPrice};
+  extractQuotesAndNormalize,updLatestCompanySecFacts,cachePreviousClose,cacheBasicStockPrice,getAllStocksFromList};
