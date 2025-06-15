@@ -455,14 +455,34 @@ const getPreProcessDataFromExtSrc = async (stock) =>{
   return errstks
  }
 
+ const getAllStocksFromDB = async () => {
+  let retval
+  let myCache = require('../servercache/cacheitems')  
+  let cacheVal = myCache.getCache(process.env.CACHE_ALL_STOCKS_DB)
+  if (cacheVal){
+    console.log("found in cache")
+    retval = cacheVal
+  }else{
+      console.log("not found in cache")
+      let initModels = require("../models/init-models"); 
+      let models = initModels(sequelize);
+      let stocklist = models.stocklist
+      await stocklist.findAll({attributes: ['symbol']}).then(data => retval=data) 
+      myCache.setCacheWithTtl(process.env.CACHE_ALL_STOCKS_DB,retval,process.env.CACHE_ALL_STOCKS_DB_TTL)
+  }
+  return retval.map(item => item.symbol)
+} 
+
  const processBasicStockPrice = async (srcTyp) => {
-    console.log("srcTypsrcTypsrcTypsrcTyp",srcTyp)
+    console.log("HUH - srcTypsrcTypsrcTypsrcTyp",srcTyp)
     let statusOfProcess = false
     let returnInformation = {}
     try {
-      prevdate = await getPreviousTradingDate()
-      let allstks = await getAllStockQuotesForEODByDate(prevdate)
-      allstks = allstks.map(item => item.symbol)
+      let allstks = await getAllStocksFromDB()
+      console.log("allstksallstksallstksallstks",allstks)
+      //prevdate = await getPreviousTradingDate()
+      //let allstks = await getAllStockQuotesForEODByDate(prevdate)
+      //allstks = allstks.map(item => item.symbol)
       //for testing only to keep volumes low..I know it's not the best way :)
       //allstks = ["AAPL","AMD","C","F","UAL","TWLO","MSFT"]
       let errstks = await loopThruStocks(allstks,srcTyp)
