@@ -173,7 +173,7 @@ app.post('/api/processsubmsgs/updatestockprice', async (req, res) => {
     let response = false
     try{
       let masterstkops = require('../server/stockmaster');
-      response = await masterstkops.cacheBasicStockPrice()
+      response = await masterstkops.cacheBasicStockPrice(req.body.srctyp)
     }
     catch (err){
       console.log(err)

@@ -398,27 +398,56 @@ const cachePreviousClose = async () =>{
   return await deco.TimeTakenDecorator(processPreviousClose,"cacheprevclose")()
  }
 
- const loadBasicStockPriceToCache = async (stock) =>{
-  const fetch = require("node-fetch");
-  let response = false
-  try {
+ const getPreProcessDataFromIntSrc = async (stock) =>{
+    const fetch = require("node-fetch");
+    let retval
     await fetch(PRED_PATTERN_URL + 'predictions/preprocess/' + stock, {method:'post', 
     headers: { 'Content-Type': 'application/json' }})
     .then(res => res.json())
     .then(json => {
-      response = Boolean(json);
+      retval = Boolean(json);
       //console.log("return from api call for - ",stock," is ",json)
     });
+    return retval
+ }
+
+ const writeToCacheBasicStockDtls = async (keyCache,valCache) =>{
+  let cacheitems = require("../servercache/cachebasicstockdtlsredis")
+  await cacheitems.setCacheWithTtl(keyCache,valCache,process.env.CACHE_BASIC_STK_PRC_TTL)
+  return true
+}
+
+const getPreProcessDataFromExtSrc = async (stock) =>{
+    const moment = require("moment");
+    let polygonOps = require('../server/externalsites/polygondata')
+    let retval = false  
+    //this should be running early in the am and will fetch data from yesterday - one day before for 2 years.
+    let qtsExt = await polygonOps.getQuotesForDateRange(stock,moment().subtract(process.env.CACHE_BASIC_STK_PRC_DUR, 'years').format("YYYY-MM-DD"),
+              moment().subtract(1, 'days').format("YYYY-MM-DD"),1,50000)
+    if (qtsExt && qtsExt.length > 0){
+      retval = await writeToCacheBasicStockDtls(process.env.CACHE_BASIC_STK_PRC+stock,qtsExt)
+    }        
+    return retval
+}
+
+ const loadBasicStockPriceToCache = async (stock,srcTyp) =>{
+  let response = false
+  try {
+    if (srcTyp === "ext"){
+      response = await getPreProcessDataFromExtSrc(stock)
+    }else{
+      response = await getPreProcessDataFromIntSrc(stock)
+    }
   } catch (error) {
     console.log("error in loadBasicStockPriceToCache - ",stock,error)
   }
   return response  
  }
 
- const loopThruStocks = async (inpstks) =>{
+ const loopThruStocks = async (inpstks,srcTyp) =>{
   let errstks = []
   for (let i=0;i<inpstks.length;i++){
-    let retval = await loadBasicStockPriceToCache(inpstks[i])
+    let retval = await loadBasicStockPriceToCache(inpstks[i],srcTyp)
     if (!retval){
       errstks.push(inpstks[i])
     }
@@ -426,7 +455,8 @@ const cachePreviousClose = async () =>{
   return errstks
  }
 
- const processBasicStockPrice = async () => {
+ const processBasicStockPrice = async (srcTyp) => {
+    console.log("srcTypsrcTypsrcTypsrcTyp",srcTyp)
     let statusOfProcess = false
     let returnInformation = {}
     try {
@@ -434,11 +464,13 @@ const cachePreviousClose = async () =>{
       let allstks = await getAllStockQuotesForEODByDate(prevdate)
       allstks = allstks.map(item => item.symbol)
       //for testing only to keep volumes low..I know it's not the best way :)
-      //allstks = ["AAPL","AMD","C","F"]
-      let errstks = await loopThruStocks(allstks)
+      //allstks = ["AAPL","AMD","C","F","UAL","TWLO","MSFT"]
+      let errstks = await loopThruStocks(allstks,srcTyp)
       returnInformation["stocksnodata"] = errstks.length || 0
       returnInformation["loadedcache"] = allstks.length - (errstks.length || 0)
-      updStockPrices(errstks)   
+      if (srcTyp !== "ext"){
+        updStockPrices(errstks)   
+      }
       statusOfProcess = true     
     } catch (error) {
       returnInformation = {'err':error}
@@ -446,9 +478,9 @@ const cachePreviousClose = async () =>{
     return {statusOfProcess,returnInformation}
  }
 
- const cacheBasicStockPrice = async () =>{
+ const cacheBasicStockPrice = async (srcTyp) =>{
   let deco = require("../server/Util/decortorcalctimetaken")
-  return await deco.TimeTakenDecorator(processBasicStockPrice,"basicstockprice")()
+  return await deco.TimeTakenDecorator(processBasicStockPrice,"basicstockprice")(srcTyp)
  }
  
  const getAllStockQuotesForEODByDate = async (inpdate) =>{
@@ -493,11 +525,5 @@ const cachePreviousClose = async () =>{
   return await deco.TimeTakenDecorator(getAndInsertAllStockEoDQuotes,"allstockeodquotes")()
  }
 
- const getAllStocksFromList = async () =>{
-  let stkquotes = require('../server/processstockquotes/stockquotes');
-  let stks = stkquotes.getAllStocksFromDB()
-  updStockPrices(stks)
- }
-
 module.exports = {processAllStockEoDQuotes,updStockPrices,processUserStockPositions,deleteUserStockPosition,
-  extractQuotesAndNormalize,updLatestCompanySecFacts,cachePreviousClose,cacheBasicStockPrice,getAllStocksFromList};
+  extractQuotesAndNormalize,updLatestCompanySecFacts,cachePreviousClose,cacheBasicStockPrice};

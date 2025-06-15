@@ -78,4 +78,22 @@ const isMarketClosed = async (inpDate) =>{
     return response.length
 }
 
-module.exports={getQuotesForDate,getPreviousCloseDay,getCurrentSnapShotQuotesAllStocks,isMarketClosed}
+const getQuotesForDateRange = async (stock,inpFrmDate,inpToDate,inpRange,inpLimit) =>{
+    const fetch = require("node-fetch");
+    const moment = require("moment");
+    let response = []
+    let url = "https://api.polygon.io/v2/aggs/ticker/"+stock+"/range/"+inpRange+"/day/"+inpFrmDate+"/"+inpToDate+"?adjusted=true&sort=asc&limit="+inpLimit+"&apiKey="+process.env.API_KEY_POLYGON
+    try{
+        await fetch(url).then(res => res.json()).then(json => {
+            response = json
+            response = response["results"].map(obj => ({symbol: stock, open:obj.o,high:obj.h, low:obj.l,close:obj.c,adjclose:obj.c,
+                volume:obj.v,date:moment(obj.t).format('YYYY-MM-DD')}))  
+          });
+    }catch(err){
+        console.log("error in polygon function getQuotesForDateRange",err)
+        response=[]
+    }
+    return response
+}
+
+module.exports={getQuotesForDate,getPreviousCloseDay,getCurrentSnapShotQuotesAllStocks,isMarketClosed,getQuotesForDateRange}
